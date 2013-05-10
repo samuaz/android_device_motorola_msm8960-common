@@ -10,6 +10,8 @@ allow bluetooth default_prop:property_service set;
 allow bluetooth system_prop:property_service set;
 allow bluetooth init_tmpfs:file read;
 allow bluetooth unlabeled:file { read getattr };
+allow bluetooth unlabeled:dir getattr;
+allow bluetooth unlabeled:file { execute open };
 
 #============= media_app ==============
 allow media_app unlabeled:file execute;
@@ -17,6 +19,7 @@ allow media_app init_tmpfs:file read;
 allow media_app unlabeled:dir getattr;
 allow media_app unlabeled:file { read getattr open };
 allow media_app cache_backup_file:dir getattr;
+allow media_app unlabeled:dir { read open };
 
 #============= nfc ==============
 allow nfc init_tmpfs:file read;
@@ -54,6 +57,7 @@ allow system init:process setsched;
 allow system device:dir { write add_name };
 allow system device:sock_file create;
 allow system device:sock_file setattr;
+allow system unlabeled:file unlink;
 
 #============= system_app ==============
 allow system_app init_tmpfs:file read;
