@@ -13,9 +13,14 @@ allow media_app init_tmpfs:file read;
 allow media_app unlabeled:dir getattr;
 allow media_app unlabeled:file { read getattr open };
 
+#============= nfc ==============
+allow nfc init_tmpfs:file read;
+
 #============= platform_app ==============
 allow platform_app init_tmpfs:file read;
 allow platform_app unlabeled:file { read getattr open };
+allow platform_app init:unix_stream_socket { read setopt };
+allow platform_app unlabeled:dir getattr;
 
 #============= release_app ==============
 allow release_app init_tmpfs:file read;
@@ -34,6 +39,14 @@ allow system unlabeled:dir { read search open getattr };
 allow system unlabeled:file { read getattr open execute execute_no_trans };
 allow system device:chr_file { read write ioctl open };
 allow system init:process setsched;
+
+#============= system_app ==============
+allow system_app init_tmpfs:file read;
+
+#============= radio ==============
+allow radio init_tmpfs:file read;
+allow radio unlabeled:dir getattr;
+allow radio unlabeled:file { read getattr open };
 
 #============= ueventd ==============
 allow ueventd unlabeled:dir search;
