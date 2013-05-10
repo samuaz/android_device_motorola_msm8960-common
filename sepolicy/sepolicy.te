@@ -1,0 +1,26 @@
+#============= bluetooth ==============
+allow bluetooth device:chr_file { read write ioctl open };
+
+#============= media_app ==============
+allow media_app unlabeled:file execute;
+
+#============= release_app ==============
+allow release_app init_tmpfs:file read;
+allow release_app unlabeled:dir getattr;
+allow release_app unlabeled:file { read getattr open };
+
+#============= shared_app ==============
+allow shared_app init_tmpfs:file read;
+allow shared_app unlabeled:dir getattr;
+allow shared_app unlabeled:file { read getattr open };
+
+#============= system ==============
+allow system init:unix_stream_socket { read setopt };
+allow system init_tmpfs:file read;
+allow system unlabeled:dir { read search open getattr };
+allow system unlabeled:file { read getattr open execute execute_no_trans };
+
+#============= ueventd ==============
+allow ueventd unlabeled:dir search;
+allow ueventd unlabeled:file { read getattr open };
+allow ueventd unlabeled:lnk_file read;

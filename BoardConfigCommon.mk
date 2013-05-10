@@ -130,3 +130,10 @@ BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
 BOARD_SUPPRESS_EMMC_WIPE := true
 TARGET_RECOVERY_FSTAB := $(LOCAL_PATH)/recovery.fstab
 TARGET_USERIMAGES_USE_EXT4 := true
+
+# SELinux policy
+BOARD_SEPOLICY_DIRS := \
+        device/motorola/msm8960-common/sepolicy
+
+BOARD_SEPOLICY_UNION := \
+        sepolicy.te
