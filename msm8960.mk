@@ -299,6 +299,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	ro.config.vc_call_vol_steps=7 \
 	persist.timed.enable=true
 
+# SELinux status
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.build.selinux=1
+
 # Wifi
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0 \
