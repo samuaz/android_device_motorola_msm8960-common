@@ -1,8 +1,21 @@
+#============= adbd ==============
+allow adbd kernel:system syslog_mod;
+allow adbd self:capability2 syslog;
+allow adbd unlabeled:file { read execute open getattr execute_no_trans };
+allow adbd unlabeled:lnk_file read;
+
 #============= bluetooth ==============
 allow bluetooth device:chr_file { read write ioctl open };
 
 #============= media_app ==============
 allow media_app unlabeled:file execute;
+allow media_app init_tmpfs:file read;
+allow media_app unlabeled:dir getattr;
+allow media_app unlabeled:file { read getattr open };
+
+#============= platform_app ==============
+allow platform_app init_tmpfs:file read;
+allow platform_app unlabeled:file { read getattr open };
 
 #============= release_app ==============
 allow release_app init_tmpfs:file read;
@@ -19,6 +32,8 @@ allow system init:unix_stream_socket { read setopt };
 allow system init_tmpfs:file read;
 allow system unlabeled:dir { read search open getattr };
 allow system unlabeled:file { read getattr open execute execute_no_trans };
+allow system device:chr_file { read write ioctl open };
+allow system init:process setsched;
 
 #============= ueventd ==============
 allow ueventd unlabeled:dir search;
