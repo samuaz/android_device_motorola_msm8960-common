@@ -33,6 +33,10 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.gsm.xml:system/etc/permissions/android.hardware.telephony.gsm.xml \
     frameworks/native/data/etc/android.hardware.telephony.cdma.xml:system/etc/permissions/android.hardware.telephony.cdma.xml
 
+# Global APN list
+PRODUCT_COPY_FILES += \
+    device/motorola/msm8960-common/apns-conf-global.xml:system/etc/apns-conf.xml
+
 ## overlays
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 TARGET_SPECIFIC_HEADER_PATH := $(LOCAL_PATH)/include
