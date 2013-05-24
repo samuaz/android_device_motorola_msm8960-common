@@ -61,10 +61,10 @@ extern "C" {
 #include <stdlib.h>
 #include <linux/ion.h>
 #include <camera.h>
-#include <cam_fifo.h>
-#include <liveshot.h>
-#include <jpege.h>
-#include <jpeg_encoder.h>
+//#include <cam_fifo.h>
+//#include <liveshot.h>
+//#include <jpege.h>
+//#include <jpeg_encoder.h>
 
 } // extern "C"
 
