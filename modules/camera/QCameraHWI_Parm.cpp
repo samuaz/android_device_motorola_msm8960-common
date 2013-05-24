@@ -268,8 +268,8 @@ static const str_map scenemode[] = {
 };
 
 static const str_map scenedetect[] = {
-    { QCameraParameters::SCENE_DETECT_OFF, FALSE  },
-    { QCameraParameters::SCENE_DETECT_ON, TRUE },
+    { QCameraParameters::SCENE_DETECT_OFF, false  },
+    { QCameraParameters::SCENE_DETECT_ON, true },
 };
 
 #define DONT_CARE AF_MODE_MAX
@@ -318,8 +318,8 @@ static const str_map frame_rate_modes[] = {
 };
 
 static const str_map touchafaec[] = {
-    { QCameraParameters::TOUCH_AF_AEC_OFF, FALSE },
-    { QCameraParameters::TOUCH_AF_AEC_ON, TRUE }
+    { QCameraParameters::TOUCH_AF_AEC_OFF, false },
+    { QCameraParameters::TOUCH_AF_AEC_ON, true }
 };
 
 static const str_map hfr[] = {
@@ -338,38 +338,38 @@ static const str_map flash[] = {
 };
 
 static const str_map lensshade[] = {
-    { QCameraParameters::LENSSHADE_ENABLE, TRUE },
-    { QCameraParameters::LENSSHADE_DISABLE, FALSE }
+    { QCameraParameters::LENSSHADE_ENABLE, true },
+    { QCameraParameters::LENSSHADE_DISABLE, false }
 };
 
 static const str_map mce[] = {
-    { QCameraParameters::MCE_ENABLE, TRUE },
-    { QCameraParameters::MCE_DISABLE, FALSE }
+    { QCameraParameters::MCE_ENABLE, true },
+    { QCameraParameters::MCE_DISABLE, false }
 };
 
 static const str_map histogram[] = {
-    { QCameraParameters::HISTOGRAM_ENABLE, TRUE },
-    { QCameraParameters::HISTOGRAM_DISABLE, FALSE }
+    { QCameraParameters::HISTOGRAM_ENABLE, true },
+    { QCameraParameters::HISTOGRAM_DISABLE, false }
 };
 
 static const str_map skinToneEnhancement[] = {
-    { QCameraParameters::SKIN_TONE_ENHANCEMENT_ENABLE, TRUE },
-    { QCameraParameters::SKIN_TONE_ENHANCEMENT_DISABLE, FALSE }
+    { QCameraParameters::SKIN_TONE_ENHANCEMENT_ENABLE, true },
+    { QCameraParameters::SKIN_TONE_ENHANCEMENT_DISABLE, false }
 };
 
 static const str_map denoise[] = {
-    { QCameraParameters::DENOISE_OFF, FALSE },
-    { QCameraParameters::DENOISE_ON, TRUE }
+    { QCameraParameters::DENOISE_OFF, false },
+    { QCameraParameters::DENOISE_ON, true }
 };
 
 static const str_map facedetection[] = {
-    { QCameraParameters::FACE_DETECTION_OFF, FALSE },
-    { QCameraParameters::FACE_DETECTION_ON, TRUE }
+    { QCameraParameters::FACE_DETECTION_OFF, false },
+    { QCameraParameters::FACE_DETECTION_ON, true }
 };
 
 static const str_map redeye_reduction[] = {
-    { QCameraParameters::REDEYE_REDUCTION_ENABLE, TRUE },
-    { QCameraParameters::REDEYE_REDUCTION_DISABLE, FALSE }
+    { QCameraParameters::REDEYE_REDUCTION_ENABLE, true },
+    { QCameraParameters::REDEYE_REDUCTION_DISABLE, false }
 };
 
 static const str_map picture_formats[] = {
@@ -378,8 +378,8 @@ static const str_map picture_formats[] = {
 };
 
 static const str_map recording_Hints[] = {
-        {"false", FALSE},
-        {"true",  TRUE}
+        {"false", false},
+        {"true",  true}
 };
 
 static const str_map preview_formats[] = {
@@ -398,8 +398,8 @@ static const preview_format_info_t preview_format_info_list[] = {
 };
 
 static const str_map zsl_modes[] = {
-    { QCameraParameters::ZSL_OFF, FALSE },
-    { QCameraParameters::ZSL_ON, TRUE },
+    { QCameraParameters::ZSL_OFF, false },
+    { QCameraParameters::ZSL_ON, true },
 };
 
 
@@ -563,7 +563,7 @@ static int parse_size(const char *str, int &width, int &height)
 }
 
 bool QCameraHardwareInterface::isValidDimension(int width, int height) {
-    bool retVal = FALSE;
+    bool retVal = false;
     /* This function checks if a given resolution is valid or not.
      * A particular resolution is considered valid if it satisfies
      * the following conditions:
@@ -582,7 +582,7 @@ bool QCameraHardwareInterface::isValidDimension(int width, int height) {
         uint32_t pictureAspectRatio = (uint32_t)((width * Q12)/height);
         for(uint32_t i = 0; i < THUMBNAIL_SIZE_COUNT; i++ ) {
             if(thumbnail_sizes[i].aspect_ratio == pictureAspectRatio) {
-                retVal = TRUE;
+                retVal = true;
                 break;
             }
         }
@@ -1962,10 +1962,10 @@ status_t QCameraHardwareInterface::setFocusMode(const QCameraParameters& params)
                                       sizeof(value),
                                       (void *)&value);
 
-                int cafSupport = FALSE;
+                int cafSupport = false;
                 if(!strcmp(str, QCameraParameters::FOCUS_MODE_CONTINUOUS_VIDEO) ||
                    !strcmp(str, QCameraParameters::FOCUS_MODE_CONTINUOUS_PICTURE)){
-                    cafSupport = TRUE;
+                    cafSupport = true;
                 }
                 ALOGE("Continuous Auto Focus %d", cafSupport);
                 ret = native_set_parms(MM_CAMERA_PARM_CONTINUOUS_AF, sizeof(cafSupport),
@@ -2886,7 +2886,7 @@ status_t QCameraHardwareInterface::setAEBracket(const QCameraParameters& params)
             exp_bracketing_t temp;
             memset(&temp, 0, sizeof(temp));
             mHdrMode = HDR_BRACKETING_OFF;
-            temp.hdr_enable= FALSE;
+            temp.hdr_enable= false;
             temp.mode = HDR_BRACKETING_OFF;
             native_set_parms(MM_CAMERA_PARM_HDR, sizeof(exp_bracketing_t), (void *)&temp);
         }
@@ -2907,7 +2907,7 @@ status_t QCameraHardwareInterface::setAEBracket(const QCameraParameters& params)
             case HDR_MODE:
                 {
                     mHdrMode = HDR_MODE;
-                    temp.hdr_enable= TRUE;
+                    temp.hdr_enable= true;
                     temp.mode = HDR_MODE;
                     temp.total_frames = 3;
                     temp.total_hal_frames = getNumOfSnapshots();
@@ -2923,7 +2923,7 @@ status_t QCameraHardwareInterface::setAEBracket(const QCameraParameters& params)
                         ALOGI("%s: capture-burst-exposures %s", __FUNCTION__, str_val);
 
                         mHdrMode = EXP_BRACKETING_MODE;
-                        temp.hdr_enable = FALSE;
+                        temp.hdr_enable = false;
                         temp.mode = EXP_BRACKETING_MODE;
                         temp.total_frames = (numFrames >  MAX_SNAPSHOT_BUFFERS -2) ? MAX_SNAPSHOT_BUFFERS -2 : numFrames;
                         temp.total_hal_frames = temp.total_frames;
@@ -2935,7 +2935,7 @@ status_t QCameraHardwareInterface::setAEBracket(const QCameraParameters& params)
                         /* Apps not set capture-burst-exposures, error case fall into bracketing off mode */
                         ALOGI("%s: capture-burst-exposures not set, back to HDR OFF mode", __FUNCTION__);
                         mHdrMode = HDR_BRACKETING_OFF;
-                        temp.hdr_enable= FALSE;
+                        temp.hdr_enable= false;
                         temp.mode = HDR_BRACKETING_OFF;
                         native_set_parms(MM_CAMERA_PARM_HDR, sizeof(exp_bracketing_t), (void *)&temp);
                     }
@@ -2945,7 +2945,7 @@ status_t QCameraHardwareInterface::setAEBracket(const QCameraParameters& params)
             default:
                 {
                     mHdrMode = HDR_BRACKETING_OFF;
-                    temp.hdr_enable= FALSE;
+                    temp.hdr_enable= false;
                     temp.mode = HDR_BRACKETING_OFF;
                     native_set_parms(MM_CAMERA_PARM_HDR, sizeof(exp_bracketing_t), (void *)&temp);
                 }
@@ -3150,7 +3150,7 @@ status_t QCameraHardwareInterface::setRecordingHintValue(const int32_t value)
 {
     native_set_parms(MM_CAMERA_PARM_RECORDING_HINT, sizeof(value),
                                            (void *)&value);
-    if(value == TRUE)
+    if(value == true)
         native_set_parms(MM_CAMERA_PARM_CAF_ENABLE, sizeof(value),
                                            (void *)&value);
     setDISMode();
