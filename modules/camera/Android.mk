@@ -14,6 +14,10 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
+# hax for libmmjpeg
+$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libmmjpeg_intermediates)
+$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libmmjpeg_intermediates/export_includes)
+
 LOCAL_CFLAGS:= -DDLOPEN_LIBMMCAMERA=$(DLOPEN_LIBMMCAMERA)
 
 ifeq ($(strip $(TARGET_USES_ION)),true)
@@ -24,6 +28,11 @@ LOCAL_CFLAGS+= -DHW_ENCODE
 
 LOCAL_C_INCLUDES+= $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
+LOCAL_C_INCLUDES += hardware/qcom/display/libgralloc \
+                    hardware/qcom/display/libgenlock \
+                    hardware/qcom/media/libstagefrighthw \
+                    system/core/include/system \
+                    hardware/libhardware/include/hardware
 
 ifeq ($(call is-board-platform,msm8960),true)
 LOCAL_HAL_FILES := QCameraHAL.cpp QCameraHWI_Parm.cpp\

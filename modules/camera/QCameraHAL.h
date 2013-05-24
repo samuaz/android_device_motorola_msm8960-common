@@ -22,6 +22,7 @@
 
 extern "C" {
 #include <mm_camera_interface2.h>
+#include <mm_camera.h>
 }
 namespace android {
 
