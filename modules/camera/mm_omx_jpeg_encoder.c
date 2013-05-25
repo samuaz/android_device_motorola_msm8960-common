@@ -36,7 +36,7 @@
 #include "omx_jpeg_ext.h"
 #include "mm_omx_jpeg_encoder.h"
 
-static uint8_t hw_encode = true;
+static uint8_t hw_encode = 1;
 static int jpegRotation = 0;
 static int isZSLMode = 0;
 static int jpegThumbnailQuality = 75;
@@ -259,8 +259,8 @@ int8_t omxJpegOpen()
 {
     OMX_DBG_INFO("%s", __func__);
     pthread_mutex_lock(&jpege_mutex);
-    OMX_ERRORTYPE ret = OMX_GetHandle(&pHandle, "OMX.qcom.image.jpeg.encoder",
-      NULL, &callbacks);
+//    OMX_ERRORTYPE ret = OMX_GetHandle(&pHandle, "OMX.qcom.image.jpeg.encoder",
+//      NULL, &callbacks);
     pthread_mutex_unlock(&jpege_mutex);
     return TRUE;
 }
@@ -270,13 +270,13 @@ int8_t omxJpegStart()
     int rc = 0;
     ALOGE("%s", __func__);
     pthread_mutex_lock(&jpege_mutex);
-    hw_encode = true;
+    hw_encode = 1;
     callbacks.EmptyBufferDone = etbdone;
     callbacks.FillBufferDone = ftbdone;
     callbacks.EventHandler = eventHandler;
     pthread_mutex_init(&lock, NULL);
     pthread_cond_init(&cond, NULL);
-    rc = OMX_Init();
+//    rc = OMX_Init();
     pthread_mutex_unlock(&jpege_mutex);
     return rc;
 }
@@ -637,7 +637,7 @@ void omxJpegFinish()
         OMX_FreeBuffer(pHandle, 0, pInBuffers);
         OMX_FreeBuffer(pHandle, 2, pInBuffers1);
         OMX_FreeBuffer(pHandle, 1, pOutBuffers);
-        OMX_Deinit();
+//        OMX_Deinit();
     }
     pthread_mutex_unlock(&jpege_mutex);
 }
@@ -667,7 +667,7 @@ void omxJpegAbort()
       OMX_FreeBuffer(pHandle, 0, pInBuffers);
       OMX_FreeBuffer(pHandle, 2, pInBuffers1);
       OMX_FreeBuffer(pHandle, 1, pOutBuffers);
-      OMX_Deinit();
+//      OMX_Deinit();
     }
     pthread_mutex_unlock(&jpege_mutex);
 }

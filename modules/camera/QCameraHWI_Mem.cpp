@@ -155,6 +155,7 @@ AshmemPool::AshmemPool(int buffer_size, int num_buffers,
     completeInitialization();
 }
 
+#if 0
 static bool register_buf(int size,
                          int frame_size,
                          int cbcr_offset,
@@ -193,7 +194,6 @@ static bool register_buf(int size,
 
 }
 
-#if 0
 bool register_record_buffers(bool register_buffer) {
     ALOGI("%s: (%d) E", __FUNCTION__, register_buffer);
     struct msm_pmem_info pmemBuf;
