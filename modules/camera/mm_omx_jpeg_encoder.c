@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -9,7 +9,7 @@
  *       copyright notice, this list of conditions and the following
  *       disclaimer in the documentation and/or other materials provided
  *       with the distribution.
- *     * Neither the name of Code Aurora Forum, Inc. nor the names of its
+ *     * Neither the name of The Linux Foundation nor the names of its
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
@@ -36,12 +36,7 @@
 #include "omx_jpeg_ext.h"
 #include "mm_omx_jpeg_encoder.h"
 
-#ifdef HW_ENCODE
 static uint8_t hw_encode = true;
-#else
-static uint8_t hw_encode = false;
-#endif
-
 static int jpegRotation = 0;
 static int isZSLMode = 0;
 static int jpegThumbnailQuality = 75;
@@ -242,13 +237,12 @@ int8_t mm_jpeg_encoder_get_buffer_offset(uint32_t width, uint32_t height,
         uint32_t padded_size = width * CEILING16(height);
         *p_y_offset = 0;
         *p_cbcr_offset = 0;
-        if(!isZSLMode){
+        //if(!isZSLMode){
         if ((jpegRotation == 90) || (jpegRotation == 180)) {
             *p_y_offset = padded_size - actual_size;
             *p_cbcr_offset = ((padded_size - actual_size) >> 1);
           }
-        }
-        *p_buf_size = padded_size * 3/2;
+        *p_buf_size = (padded_size + (padded_size - actual_size)) * 3/2;
         planes[0] = width * CEILING16(height);
         planes[1] = width * CEILING16(height)/2;
     } else {
@@ -273,16 +267,18 @@ int8_t omxJpegOpen()
 
 int8_t omxJpegStart()
 {
+    int rc = 0;
     ALOGE("%s", __func__);
     pthread_mutex_lock(&jpege_mutex);
+    hw_encode = true;
     callbacks.EmptyBufferDone = etbdone;
     callbacks.FillBufferDone = ftbdone;
     callbacks.EventHandler = eventHandler;
     pthread_mutex_init(&lock, NULL);
     pthread_cond_init(&cond, NULL);
-    OMX_Init();
+    rc = OMX_Init();
     pthread_mutex_unlock(&jpege_mutex);
-    return TRUE;
+    return rc;
 }
 
 static omx_jpeg_color_format format_cam2jpeg(cam_format_t fmt)
@@ -310,6 +306,7 @@ int8_t omxJpegEncodeNext(omx_jpeg_encode_params *encode_params)
     encoding = 1;
     if(inputPort == NULL || inputPort1 == NULL || outputPort == NULL) {
       OMX_DBG_INFO("%s:pointer is null: X", __func__);
+      pthread_mutex_unlock(&jpege_mutex);
       return -1;
     }
     inputPort->nPortIndex = INPUT_PORT;
@@ -337,10 +334,7 @@ int8_t omxJpegEncodeNext(omx_jpeg_encode_params *encode_params)
         format_cam2jpeg(encode_params->dimension->main_img_format);
     userpreferences.thumbnail_color_format =
         format_cam2jpeg(encode_params->dimension->thumb_format);
-    if (hw_encode)
-        userpreferences.preference = OMX_JPEG_PREF_HW_ACCELERATED_PREFERRED;
-    else
-        userpreferences.preference = OMX_JPEG_PREF_SOFTWARE_ONLY;
+
 
     pmem_info.fd = encode_params->snapshot_fd;
     pmem_info.offset = 0;
@@ -391,21 +385,31 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
 
     bufferoffset.width = encode_params->dimension->orig_picture_dx;
     bufferoffset.height = encode_params->dimension->orig_picture_dy;
-    mm_jpeg_encoder_get_buffer_offset( bufferoffset.width, bufferoffset.height,&bufferoffset.yOffset,
-                                       &bufferoffset.cbcrOffset,
-                                       &bufferoffset.totalSize,&num_planes,planes);
+
+    if (hw_encode)
+        userpreferences.preference = OMX_JPEG_PREF_HW_ACCELERATED_PREFERRED;
+    else
+        userpreferences.preference = OMX_JPEG_PREF_SOFTWARE_ONLY;
+    if (encode_params->a_cbcroffset > 0) {
+        userpreferences.preference = OMX_JPEG_PREF_SOFTWARE_ONLY;
+        hw_encode = 0;
+    }
+    mm_jpeg_encoder_get_buffer_offset(bufferoffset.width, bufferoffset.height,
+                    &bufferoffset.yOffset,
+                    &bufferoffset.cbcrOffset,
+                    &bufferoffset.totalSize, &num_planes, planes);
     if (encode_params->a_cbcroffset > 0) {
         bufferoffset.totalSize = encode_params->a_cbcroffset * 1.5;
     }
     OMX_GetExtensionIndex(pHandle,"omx.qcom.jpeg.exttype.buffer_offset",&buffer_offset);
-    OMX_DBG_INFO(" Buffer width = %d, Buffer  height = %d, yOffset =%d, cbcrOffset =%d, totalSize = %d\n",
+    ALOGE(" Buffer width = %d, Buffer  height = %d, yOffset =%d, cbcrOffset =%d, totalSize = %d\n",
                  bufferoffset.width, bufferoffset.height, bufferoffset.yOffset,
                  bufferoffset.cbcrOffset,bufferoffset.totalSize);
     OMX_SetParameter(pHandle, buffer_offset, &bufferoffset);
 
 
     if (encode_params->a_cbcroffset > 0) {
-        OMX_DBG_ERROR("Using acbcroffset\n");
+        //ALOGE("Using acbcroffset\n");
         bufferoffset1.cbcrOffset = encode_params->a_cbcroffset;
         OMX_GetExtensionIndex(pHandle,"omx.qcom.jpeg.exttype.acbcr_offset",&buffer_offset);
         OMX_SetParameter(pHandle, buffer_offset, &bufferoffset1);
@@ -446,13 +450,10 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
     userpreferences.thumbnail_color_format =
       get_jpeg_format_from_cam_format(encode_params->thumbnail_format);
 
-    if (hw_encode)
-        userpreferences.preference = OMX_JPEG_PREF_HW_ACCELERATED_PREFERRED;
-    else
-        userpreferences.preference = OMX_JPEG_PREF_SOFTWARE_ONLY;
 
 
-      OMX_DBG_ERROR("%s:Scaling params in1_w %d in1_h %d out1_w %d out1_h %d"
+
+      ALOGE("%s:Scaling params in1_w %d in1_h %d out1_w %d out1_h %d"
                   "main_img in2_w %d in2_h %d out2_w %d out2_h %d\n", __func__,
       encode_params->scaling_params->in1_w,
       encode_params->scaling_params->in1_h,
@@ -463,82 +464,93 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
       encode_params->scaling_params->out2_w,
       encode_params->scaling_params->out2_h);
    /*Main image scaling*/
-    OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+    ALOGE("%s:%d/n",__func__,__LINE__);
 
 
     if (encode_params->scaling_params->in2_w &&
         encode_params->scaling_params->in2_h) {
-        if (jpegRotation) {
-            userpreferences.preference = OMX_JPEG_PREF_SOFTWARE_ONLY;
-            OMX_DBG_INFO("%s:Scaling and roation true: setting pref to sw\n",
-              __func__);
-        }
 
       /* Scaler information  for main image */
         recttype.nWidth = CEILING2(encode_params->scaling_params->in2_w);
         recttype.nHeight = CEILING2(encode_params->scaling_params->in2_h);
-        OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+        ALOGE("%s:%d/n",__func__,__LINE__);
 
         if (encode_params->main_crop_offset) {
             recttype.nLeft = encode_params->main_crop_offset->x;
             recttype.nTop = encode_params->main_crop_offset->y;
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+            ALOGE("%s:%d/n",__func__,__LINE__);
 
         } else {
             recttype.nLeft = 0;
             recttype.nTop = 0;
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+            ALOGE("%s:%d/n",__func__,__LINE__);
 
         }
-        OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+        ALOGE("%s:%d/n",__func__,__LINE__);
 
         recttype.nPortIndex = 1;
         OMX_SetConfig(pHandle, OMX_IndexConfigCommonInputCrop, &recttype);
-        OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+        ALOGE("%s:%d/n",__func__,__LINE__);
 
         if (encode_params->scaling_params->out2_w &&
             encode_params->scaling_params->out2_h) {
             recttype.nWidth = (encode_params->scaling_params->out2_w);
             recttype.nHeight = (encode_params->scaling_params->out2_h);
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+            ALOGE("%s:%d/n",__func__,__LINE__);
 
 
             recttype.nPortIndex = 1;
             OMX_SetConfig(pHandle, OMX_IndexConfigCommonOutputCrop, &recttype);
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+            ALOGE("%s:%d/n",__func__,__LINE__);
 
         }
 
     } else {
-        OMX_DBG_ERROR("%s: There is no main image scaling information",
+        ALOGE("%s: There is no main image scaling information",
           __func__);
     }
   /*case of thumbnail*/
-    if (encode_params->scaling_params->in1_w &&
-        encode_params->scaling_params->in1_h) {
+
+    if ((encode_params->scaling_params->in1_w &&
+        encode_params->scaling_params->in1_h) ||
+        ((encode_params->scaling_params->out1_w !=
+        encode_params->dimension->thumbnail_width) &&
+        (encode_params->scaling_params->out1_h !=
+        encode_params->dimension->thumbnail_height))) {
+
         thumbnail.scaling = 0;
-        thumbnail.cropWidth = CEILING2(encode_params->scaling_params->in1_w);
-        thumbnail.cropHeight = CEILING2(encode_params->scaling_params->in1_h);
+
+        if ((encode_params->scaling_params->out1_w !=
+            encode_params->dimension->thumbnail_width)&&
+            (encode_params->scaling_params->out1_h !=
+            encode_params->dimension->thumbnail_height)) {
+
+            OMX_DBG_INFO("%s:%d/n",__func__,__LINE__);
+            thumbnail.cropWidth = CEILING2(encode_params->dimension->thumbnail_width);
+            thumbnail.cropHeight = CEILING2(encode_params->dimension->thumbnail_height);
+        }
+        if (encode_params->scaling_params->in1_w &&
+            encode_params->scaling_params->in1_h) {
+            OMX_DBG_INFO("%s:%d/n",__func__,__LINE__);
+            thumbnail.cropWidth = CEILING2(encode_params->scaling_params->in1_w);
+            thumbnail.cropHeight = CEILING2(encode_params->scaling_params->in1_h);
+        }
         thumbnail.width  = encode_params->scaling_params->out1_w;
         thumbnail.height = encode_params->scaling_params->out1_h;
 
         if (encode_params->thumb_crop_offset) {
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
+            OMX_DBG_INFO("%s:%d/n",__func__,__LINE__);
 
             thumbnail.left = encode_params->thumb_crop_offset->x;
             thumbnail.top = encode_params->thumb_crop_offset->y;
             thumbnail.scaling = 1;
         } else {
-            OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
-
             thumbnail.left = 0;
             thumbnail.top = 0;
         }
     } else {
-        OMX_DBG_ERROR("%s:%d/n",__func__,__LINE__);
-
         thumbnail.scaling = 0;
-        OMX_DBG_ERROR("%s: There is no thumbnail scaling information",
+        ALOGE("%s: There is no thumbnail scaling information",
           __func__);
     }
     OMX_GetExtensionIndex(pHandle,"omx.qcom.jpeg.exttype.user_preferences",
@@ -552,8 +564,8 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
     OMX_DBG_INFO("%s Thumbnail present? : %d ", __func__,
                  encode_params->hasThumbnail);
     if (encode_params->hasThumbnail) {
-	OMX_GetExtensionIndex(pHandle, "omx.qcom.jpeg.exttype.thumbnail", &type);
-	OMX_SetParameter(pHandle, type, &thumbnail);
+    OMX_GetExtensionIndex(pHandle, "omx.qcom.jpeg.exttype.thumbnail", &type);
+    OMX_SetParameter(pHandle, type, &thumbnail);
     }
     qFactor.nPortIndex = INPUT_PORT;
     OMX_GetParameter(pHandle, OMX_IndexParamQFactor, &qFactor);
@@ -570,42 +582,12 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
     OMX_SetParameter(pHandle, thumbnailQualityType, &thumbnailQuality);
 
     ALOGE("isZSLMode is %d\n",isZSLMode);
-    if(!isZSLMode){
-    //Pass rotation if not ZSL mode
     rotType.nPortIndex = OUTPUT_PORT;
     rotType.nRotation = jpegRotation;
     OMX_SetConfig(pHandle, OMX_IndexConfigCommonRotate, &rotType);
     ALOGE("Set rotation to %d\n",jpegRotation);
-    }
 
     OMX_GetExtensionIndex(pHandle, "omx.qcom.jpeg.exttype.exif", &exif);
-    /*temporarily set rotation in EXIF data. This is done to avoid image corruption
-      issues in ZSL mode since roation is known before hand. The orientation is set in the
-      exif tag and decoder will decode it will the right orientation. need to add double
-      padding to fix the issue */
-    if(isZSLMode){
-
-      //Get the orientation tag values depending on rotation
-      switch(jpegRotation){
-        case 0: orientation =1; //Normal
-                break;
-        case 90: orientation =6; //Rotated 90 CCW
-                 break;
-        case 180: orientation =3; //Rotated 180
-                  break;
-        case 270: orientation =8; //Rotated 90 CW
-                  break;
-        default: orientation =1;
-                 break;
-     }
-      tag.tag_id = EXIFTAGID_ORIENTATION;
-      tag.tag_entry.type = EXIFTAGTYPE_ORIENTATION;
-      tag.tag_entry.count =1;
-      tag.tag_entry.copy = 1;
-      tag.tag_entry.data._short = orientation;
-      ALOGE("%s jpegRotation = %d , orientation value =%d\n",__func__,jpegRotation,orientation);
-      OMX_SetParameter(pHandle, exif, &tag);
-      }
 
     //Set omx parameter for all exif tags
     int i;
@@ -617,7 +599,7 @@ int8_t omxJpegEncode(omx_jpeg_encode_params *encode_params)
     pmem_info.fd = encode_params->snapshot_fd;
     pmem_info.offset = 0;
 
-    OMX_DBG_ERROR("input buffer size is %d",size);
+    ALOGE("input buffer size is %d",size);
     OMX_UseBuffer(pHandle, &pInBuffers, 0, &pmem_info, size,
     (void *) encode_params->snapshot_buf);
 
@@ -706,7 +688,7 @@ int8_t mm_jpeg_encoder_setThumbnailQuality(uint32_t quality)
 {
     pthread_mutex_lock(&jpege_mutex);
     ALOGE("%s: current thumbnail quality %d ," \
-    " new quality : %d\n", __func__, jpegThumbnailQuality, quality);
+     "new quality : %d\n", __func__, jpegThumbnailQuality, quality);
     if (quality <= 100)
         jpegThumbnailQuality = quality;
     pthread_mutex_unlock(&jpege_mutex);

@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+** Copyright (c) 2011, The Linux Foundation. All rights reserved.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 extern "C" {
 
 #include <camera.h>
-//#include <camera_defs_i.h>
+#include <camera_defs_i.h>
 #include <mm_camera_interface2.h>
 }
 

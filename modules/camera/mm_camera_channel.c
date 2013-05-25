@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -10,7 +10,7 @@ met:
       copyright notice, this list of conditions and the following
       disclaimer in the documentation and/or other materials provided
       with the distribution.
-    * Neither the name of Code Aurora Forum, Inc. nor the names of its
+    * Neither the name of The Linux Foundation nor the names of its
       contributors may be used to endorse or promote products derived
       from this software without specific prior written permission.
 
@@ -395,6 +395,7 @@ static int32_t mm_camera_ch_util_qbuf(mm_camera_obj_t *my_obj,
     int32_t rc = -1;
     mm_camera_stream_t *stream;
     struct ion_flush_data cache_inv_data;
+    struct ion_custom_data custom_data;
     int ion_fd;
     struct msm_frame *cache_frame;
     struct msm_frame *cache_frame1 = NULL;
@@ -406,7 +407,7 @@ static int32_t mm_camera_ch_util_qbuf(mm_camera_obj_t *my_obj,
     }
 #endif
 
-    ALOGV("<DEBUG>: %s:ch_type:%d",__func__,ch_type);
+    CDBG("<DEBUG>: %s:ch_type:%d",__func__,ch_type);
     switch(ch_type) {
     case MM_CAMERA_CH_RAW:
         rc = mm_camera_stream_fsm_fn_vtbl(my_obj,
@@ -447,7 +448,7 @@ static int32_t mm_camera_ch_util_qbuf(mm_camera_obj_t *my_obj,
             cache_frame = val->snapshot.main.frame;
             CDBG("buffer fd = %d, length = %d, vaddr = %p\n",
                  val->snapshot.main.frame->fd, val->snapshot.main.frame->ion_alloc.len, val->snapshot.main.frame->buffer);
-            if(!rc) {
+            if(!rc && (!my_obj->full_liveshot)) {
                 if (my_obj->op_mode == MM_CAMERA_OP_MODE_ZSL)
                   stream = &my_obj->ch[MM_CAMERA_CH_PREVIEW].preview.stream;
                 else
@@ -470,9 +471,10 @@ static int32_t mm_camera_ch_util_qbuf(mm_camera_obj_t *my_obj,
     cache_inv_data.fd = cache_frame->fd;
     cache_inv_data.handle = cache_frame->fd_data.handle;
     cache_inv_data.length = cache_frame->ion_alloc.len;
-
+    custom_data.cmd = ION_IOC_INV_CACHES;
+    custom_data.arg = &cache_inv_data;
     if(ion_fd > 0) {
-        if(ioctl(ion_fd, ION_IOC_INV_CACHES, &cache_inv_data) < 0)
+        if(ioctl(ion_fd, ION_IOC_CUSTOM, &custom_data) < 0)
             CDBG_ERROR("%s: Cache Invalidate failed\n", __func__);
         else {
             CDBG("%s: Successful cache invalidate\n", __func__);
@@ -481,7 +483,9 @@ static int32_t mm_camera_ch_util_qbuf(mm_camera_obj_t *my_obj,
               cache_inv_data.fd = cache_frame1->fd;
               cache_inv_data.handle = cache_frame1->fd_data.handle;
               cache_inv_data.length = cache_frame1->ion_alloc.len;
-              if(ioctl(ion_fd, ION_IOC_INV_CACHES, &cache_inv_data) < 0)
+              custom_data.cmd = ION_IOC_INV_CACHES;
+              custom_data.arg = &cache_inv_data;
+              if(ioctl(ion_fd, ION_IOC_CUSTOM, &custom_data) < 0)
                 CDBG_ERROR("%s: Cache Invalidate failed\n", __func__);
               else
                 CDBG("%s: Successful cache invalidate\n", __func__);
@@ -567,6 +571,8 @@ static int mm_camera_channel_skip_frames(mm_camera_obj_t *my_obj,
     CDBG("count =%d, look_back=%d,mq->match_cnt=%d, sq->match_cnt=%d",
                count ,frame_attr->look_back, mq->match_cnt,sq->match_cnt);
     count -= frame_attr->look_back;
+    CDBG("count=%d, frame_attr->look_back=%d,mq->match_cnt=%d, sq->match_cnt=%d",
+               count, frame_attr->look_back, mq->match_cnt,sq->match_cnt);
     for(i=0; i < count; i++) {
         mframe = mm_camera_stream_frame_deq(mq);
         sframe = mm_camera_stream_frame_deq(sq);
@@ -604,7 +610,7 @@ void mm_camera_dispatch_buffered_frames(mm_camera_obj_t *my_obj,
     mm_camera_frame_queue_t *sq = NULL;
     mm_camera_stream_t *stream1 = NULL;
     mm_camera_stream_t *stream2 = NULL;
-ALOGE("%s: mzhu, E", __func__);
+    ALOGE("%s: E", __func__);
     mm_camera_ch_util_get_stream_objs(my_obj, ch_type, &stream1, &stream2);
     stream2 = &my_obj->ch[MM_CAMERA_CH_PREVIEW].preview.stream;
     if(stream1) {
@@ -613,6 +619,7 @@ ALOGE("%s: mzhu, E", __func__);
     if(stream2) {
       sq = &stream2->frame.readyq;
     }
+    CDBG("mq=%p, sq=%p, stream1=%p, stream2=%p", mq, sq, stream1, stream2);
     pthread_mutex_lock(&ch->mutex);
     if (mq && sq && stream1 && stream2) {
         rc = mm_camera_channel_skip_frames(my_obj, mq, sq, stream1, stream2, &ch->buffering_frame);
@@ -622,6 +629,7 @@ ALOGE("%s: mzhu, E", __func__);
         }
         num_of_req_frame = my_obj->snap_burst_num_by_user;
         ch->snapshot.pending_cnt = num_of_req_frame;
+        CDBG("num_of_req_frame =%d", num_of_req_frame);
         for(i = 0; i < num_of_req_frame; i++) {
             mframe = mm_camera_stream_frame_deq(mq);
             sframe = mm_camera_stream_frame_deq(sq);
@@ -665,8 +673,8 @@ ALOGE("%s: mzhu, E", __func__);
       CDBG_ERROR(" mq =%p sq =%p stream1 =%p stream2 =%p", mq, sq , stream1 , stream2);
 
     }
-    CDBG("%s: burst number: %d, pending_count: %d", __func__,
-        my_obj->snap_burst_num_by_user, ch->snapshot.pending_cnt);
+    CDBG("%s: Number of burst: %d, pending_count: %d", __func__,
+        ch->snapshot.num_shots, ch->snapshot.pending_cnt);
 end:
     pthread_mutex_unlock(&ch->mutex);
     /* If we are done sending callbacks for all the requested number of snapshots

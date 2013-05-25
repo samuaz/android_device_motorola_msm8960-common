@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2011-2012 Code Aurora Forum. All rights reserved.
+** Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@
 #include <hardware/camera.h>
 #include <binder/MemoryBase.h>
 #include <binder/MemoryHeapBase.h>
-#include <binder/MemoryHeapPmem.h>
+//#include <binder/MemoryHeapPmem.h>
 #include <utils/threads.h>
 #include <cutils/properties.h>
 #include <camera/Camera.h>
-#include <camera/CameraParameters.h>
+#include <camera/QCameraParameters.h>
 #include <system/window.h>
 #include <system/camera.h>
 #include <hardware/camera.h>
@@ -36,12 +36,12 @@
 
 extern "C" {
 #include <linux/android_pmem.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include <camera.h>
-//#include <camera_defs_i.h>
+#include <camera_defs_i.h>
 #include <mm_camera_interface2.h>
 
-#include "mm_jpeg_encoder.h"
+#include "mm_omx_jpeg_encoder.h"
 
 } //extern C
 
@@ -51,10 +51,6 @@ extern "C" {
 //Error codes
 #define  NOT_FOUND -1
 #define MAX_ZOOM_RATIOS 62
-#define QCIF_WIDTH      176
-#define QCIF_HEIGHT     144
-#define D1_WIDTH        720
-#define D1_HEIGHT       480
 
 #ifdef Q12
 #undef Q12
@@ -69,6 +65,9 @@ extern "C" {
 #define D1_WIDTH        720
 #define D1_HEIGHT       480
 
+#define THUMBNAIL_DEFAULT_WIDTH 512
+#define THUMBNAIL_DEFAULT_HEIGHT 384
+
 struct str_map {
     const char *const desc;
     int val;
@@ -80,6 +79,7 @@ struct preview_format_info_t {
    cam_pad_format_t padding;
    int num_planar;
 };
+
 
 typedef enum {
   CAMERA_STATE_UNINITED,
@@ -155,6 +155,15 @@ typedef struct {
 } QCameraHalHeap_t;
 
 typedef struct {
+     camera_memory_t*  camera_memory[3];
+     int main_ion_fd[3];
+     struct ion_allocation_data alloc[3];
+     struct ion_fd_data ion_info_fd[3];
+     int fd[3];
+     int size;
+} QCameraStatHeap_t;
+
+typedef struct {
   int32_t msg_type;
   int32_t ext1;
   int32_t ext2;
@@ -222,7 +231,6 @@ typedef struct{
     long        mGPSTimestamp;
 
 } exif_values_t;
-
 
 namespace android {
 
@@ -434,9 +442,6 @@ public:
 
     //bool     useOverlay(void);
     //virtual status_t setOverlay(const sp<Overlay> &overlay);
-
-    void        encodeData();
-
     void processEvent(mm_camera_event_t *);
     int  getJpegQuality() const;
     int  getNumOfSnapshots(void) const;
@@ -462,10 +467,18 @@ public:
       mm_camera_buf_def_t *buf_def, uint8_t num_planes, uint32_t *planes);
 
     int releaseHeapMem( QCameraHalHeap_t *heap);
+    status_t sendMappingBuf(int ext_mode, int idx, int fd, uint32_t size,
+      int cameraid, mm_camera_socket_msg_type msg_type);
+    status_t sendUnMappingBuf(int ext_mode, int idx, int cameraid,
+      mm_camera_socket_msg_type msg_type);
 
     int allocate_ion_memory(QCameraHalHeap_t *p_camera_memory, int cnt,
       int ion_type);
     int deallocate_ion_memory(QCameraHalHeap_t *p_camera_memory, int cnt);
+
+    int allocate_ion_memory(QCameraStatHeap_t *p_camera_memory, int cnt,
+      int ion_type);
+    int deallocate_ion_memory(QCameraStatHeap_t *p_camera_memory, int cnt);
 
     int cache_ops(struct ion_flush_data *cache_inv_data, int type);
 
@@ -473,12 +486,7 @@ public:
       char* ext, int index);
     preview_format_info_t getPreviewFormatInfo( );
     bool isCameraReady();
-    exif_tags_info_t* getExifData(){ return mExifData; }
-    void resetExifData();
-    void initExifData();
-    int getExifTableNumEntries() { return mExifTableNumEntries; }
-    void changeMode(camera_mode_t mode);
-    int mZslFlashEnable;
+    bool isNoDisplayMode();
 
 private:
     int16_t  zoomRatios[MAX_ZOOM_RATIOS];
@@ -487,7 +495,7 @@ private:
     void initDefaultParameters();
     bool getMaxPictureDimension(mm_camera_dimension_t *dim);
 
-    status_t updateFocusDistances(const char *focusmode);
+    status_t updateFocusDistances();
 
     bool native_set_parms(mm_camera_parm_type_t type, uint16_t length, void *value);
     bool native_set_parms( mm_camera_parm_type_t type, uint16_t length, void *value, int *result);
@@ -520,7 +528,7 @@ private:
     bool supportsSelectableZoneAf();
     bool supportsFaceDetection();
     bool supportsRedEyeReduction();
-    bool preview_parm_config (cam_ctrl_dimension_t* dim,CameraParameters& parm);
+    bool preview_parm_config (cam_ctrl_dimension_t* dim, QCameraParameters& parm);
 
     void stopPreviewInternal();
     void stopRecordingInternal();
@@ -533,69 +541,73 @@ private:
 
     status_t runFaceDetection();
 
-    status_t          setParameters(const CameraParameters& params);
-    CameraParameters&  getParameters() ;
+    status_t           setParameters(const QCameraParameters& params);
+    QCameraParameters&  getParameters() ;
 
-    status_t setCameraMode(const CameraParameters& params);
+    status_t setCameraMode(const QCameraParameters& params);
     status_t setPictureSizeTable(void);
     status_t setPreviewSizeTable(void);
-    status_t setPreviewSize(const CameraParameters& params);
-    status_t setJpegThumbnailSize(const CameraParameters& params);
-    status_t setPreviewFpsRange(const CameraParameters& params);
-    status_t setPreviewFrameRate(const CameraParameters& params);
-    status_t setPreviewFrameRateMode(const CameraParameters& params);
-    status_t setVideoSize(const CameraParameters& params);
-    status_t setPictureSize(const CameraParameters& params);
-    status_t setJpegQuality(const CameraParameters& params);
-    status_t setNumOfSnapshot(const CameraParameters& params);
+    status_t setVideoSizeTable(void);
+    status_t setPreviewSize(const QCameraParameters& params);
+    status_t setJpegThumbnailSize(const QCameraParameters& params);
+    status_t setPreviewFpsRange(const QCameraParameters& params);
+    status_t setPreviewFrameRate(const QCameraParameters& params);
+    status_t setPreviewFrameRateMode(const QCameraParameters& params);
+    status_t setVideoSize(const QCameraParameters& params);
+    status_t setPictureSize(const QCameraParameters& params);
+    status_t setJpegQuality(const QCameraParameters& params);
+    status_t setNumOfSnapshot(const QCameraParameters& params);
     status_t setJpegRotation(int isZSL);
-    int getJpegRotation(void);
+	int getJpegRotation(void);
     int getISOSpeedValue();
-    status_t setAntibanding(const CameraParameters& params);
-    status_t setEffect(const CameraParameters& params);
-    status_t setExposureCompensation(const CameraParameters &params);
-    status_t setAutoExposure(const CameraParameters& params);
-    status_t setWhiteBalance(const CameraParameters& params);
-    status_t setFlash(const CameraParameters& params);
-    status_t setGpsLocation(const CameraParameters& params);
-    status_t setRotation(const CameraParameters& params);
-    status_t setZoom(const CameraParameters& params);
-    status_t setFocusMode(const CameraParameters& params);
-    status_t setBrightness(const CameraParameters& params);
-    status_t setSkinToneEnhancement(const CameraParameters& params);
-    status_t setOrientation(const CameraParameters& params);
-    status_t setLensshadeValue(const CameraParameters& params);
-    status_t setMCEValue(const CameraParameters& params);
-    status_t setISOValue(const CameraParameters& params);
-    status_t setPictureFormat(const CameraParameters& params);
-    status_t setSharpness(const CameraParameters& params);
-    status_t setContrast(const CameraParameters& params);
-    status_t setSaturation(const CameraParameters& params);
-    status_t setWaveletDenoise(const CameraParameters& params);
-    status_t setSceneMode(const CameraParameters& params);
-    status_t setContinuousAf(const CameraParameters& params);
+    status_t setAntibanding(const QCameraParameters& params);
+    status_t setEffect(const QCameraParameters& params);
+    status_t setExposureCompensation(const QCameraParameters &params);
+    status_t setAutoExposure(const QCameraParameters& params);
+    status_t setWhiteBalance(const QCameraParameters& params);
+    status_t setFlash(const QCameraParameters& params);
+    status_t setGpsLocation(const QCameraParameters& params);
+    status_t setRotation(const QCameraParameters& params);
+    status_t setZoom(const QCameraParameters& params);
+    status_t setFocusMode(const QCameraParameters& params);
+    status_t setBrightness(const QCameraParameters& params);
+    status_t setSkinToneEnhancement(const QCameraParameters& params);
+    status_t setOrientation(const QCameraParameters& params);
+    status_t setLensshadeValue(const QCameraParameters& params);
+    status_t setMCEValue(const QCameraParameters& params);
+    status_t setISOValue(const QCameraParameters& params);
+    status_t setPictureFormat(const QCameraParameters& params);
+    status_t setSharpness(const QCameraParameters& params);
+    status_t setContrast(const QCameraParameters& params);
+    status_t setSaturation(const QCameraParameters& params);
+    status_t setWaveletDenoise(const QCameraParameters& params);
+    status_t setSceneMode(const QCameraParameters& params);
+    status_t setContinuousAf(const QCameraParameters& params);
     status_t setFaceDetection(const char *str);
-    status_t setSceneDetect(const CameraParameters& params);
-    status_t setStrTextures(const CameraParameters& params);
-    status_t setPreviewFormat(const CameraParameters& params);
-    status_t setSelectableZoneAf(const CameraParameters& params);
-    status_t setOverlayFormats(const CameraParameters& params);
-    status_t setHighFrameRate(const CameraParameters& params);
-    status_t setRedeyeReduction(const CameraParameters& params);
-    status_t setAEBracket(const CameraParameters& params);
-    status_t setFaceDetect(const CameraParameters& params);
-    status_t setDenoise(const CameraParameters& params);
-    status_t setAecAwbLock(const CameraParameters & params);
+    status_t setSceneDetect(const QCameraParameters& params);
+    status_t setStrTextures(const QCameraParameters& params);
+    status_t setPreviewFormat(const QCameraParameters& params);
+    status_t setSelectableZoneAf(const QCameraParameters& params);
+    status_t setOverlayFormats(const QCameraParameters& params);
+    status_t setHighFrameRate(const QCameraParameters& params);
+    status_t setRedeyeReduction(const QCameraParameters& params);
+    status_t setAEBracket(const QCameraParameters& params);
+    status_t setFaceDetect(const QCameraParameters& params);
+    status_t setDenoise(const QCameraParameters& params);
+    status_t setAecAwbLock(const QCameraParameters & params);
     status_t setHistogram(int histogram_en);
-    status_t setRecordingHint(const CameraParameters& params);
-    status_t setFocusAreas(const CameraParameters& params);
-    status_t setMeteringAreas(const CameraParameters& params);
+    status_t setRecordingHint(const QCameraParameters& params);
+    status_t setRecordingHintValue(const int32_t value);
+    status_t setFocusAreas(const QCameraParameters& params);
+    status_t setMeteringAreas(const QCameraParameters& params);
     status_t setFullLiveshot(void);
     status_t setDISMode(void);
     status_t setCaptureBurstExp(void);
+    status_t setPowerMode(const QCameraParameters& params);
     void takePicturePrepareHardware( );
+    status_t setNoDisplayMode(const QCameraParameters& params);
 
-    isp3a_af_mode_t getAutoFocusMode(const CameraParameters& params);
+    isp3a_af_mode_t getAutoFocusMode(const QCameraParameters& params);
     bool isValidDimension(int w, int h);
 
     String8 create_values_str(const str_map *values, int len);
@@ -606,23 +618,30 @@ private:
     void wdenoiseEvent(cam_ctrl_status_t status, void *cookie);
     bool isLowPowerCamcorder();
     void freePictureTable(void);
+    void freeVideoSizeTable(void);
 
     int32_t createPreview();
     int32_t createRecord();
     int32_t createSnapshot();
+
+    void prepareVideoPicture(bool disable);
 
     int getHDRMode();
     //EXIF
     void addExifTag(exif_tag_id_t tagid, exif_tag_type_t type,
                         uint32_t count, uint8_t copy, void *data);
     void setExifTags();
+    void initExifData();
+    void deinitExifData();
     void setExifTagsGPS();
+    exif_tags_info_t* getExifData(){ return mExifData; }
+    int getExifTableNumEntries() { return mExifTableNumEntries; }
     void parseGPSCoordinate(const char *latlonString, rat_t* coord);
 
     int           mCameraId;
     camera_mode_t myMode;
 
-    CameraParameters    mParameters;
+    QCameraParameters    mParameters;
     //sp<Overlay>         mOverlay;
     int32_t             mMsgEnabled;
 
@@ -648,11 +667,12 @@ private:
     QCameraStream       *mStreamDisplay;
     QCameraStream       *mStreamRecord;
     QCameraStream       *mStreamSnap;
-	QCameraStream       *mStreamLiveSnap;
+    QCameraStream       *mStreamLiveSnap;
 
     cam_ctrl_dimension_t mDimension;
-    int  previewWidth, previewHeight;
+    int  mPreviewWidth, mPreviewHeight;
     int  videoWidth, videoHeight;
+    int  thumbnailWidth, thumbnailHeight;
     int  maxSnapshotWidth, maxSnapshotHeight;
     int  mPreviewFormat;
     int  mFps;
@@ -662,6 +682,8 @@ private:
     int  mDenoiseValue;
     int  mHJR;
     int  mRotation;
+    int  mJpegQuality;
+    int  mThumbnailQuality;
     int  mTargetSmoothZoom;
     int  mSmoothZoomStep;
     int  mMaxZoom;
@@ -670,11 +692,15 @@ private:
     int  mFaceDetectOn;
     int  mDumpFrmCnt;
     int  mDumpSkipCnt;
+    int  mFocusMode;
 
     unsigned int mPictureSizeCount;
     unsigned int mPreviewSizeCount;
+    int mPowerMode;
+    unsigned int mVideoSizeCount;
 
     bool mAutoFocusRunning;
+    bool mNeedToUnlockCaf;
     bool mMultiTouch;
     bool mHasAutoFocusSupport;
     bool mInitialized;
@@ -688,7 +714,10 @@ private:
     bool mSendMetaData;
     bool mFullLiveshotEnabled;
     bool mRecordingHint;
+    bool mStateLiveshot;
     int mHdrMode;
+    int mSnapshotFormat;
+    bool mRestartPreview;
 
 /*for histogram*/
     int            mStatsOn;
@@ -696,6 +725,7 @@ private:
     bool           mSendData;
     sp<AshmemPool> mStatHeap;
     camera_memory_t *mStatsMapped[3];
+    QCameraStatHeap_t mHistServer;
     int32_t        mStatSize;
 
     bool mZslLookBackMode;
@@ -715,6 +745,7 @@ private:
     String8 mTouchAfAecValues;
     String8 mPreviewSizeValues;
     String8 mPictureSizeValues;
+    String8 mVideoSizeValues;
     String8 mFlashValues;
     String8 mLensShadeValues;
     String8 mMceValues;
@@ -732,6 +763,7 @@ private:
     String8 denoise_value;
     String8 mFpsRangesSupportedValues;
     String8 mZslValues;
+    String8 mFocusDistance;
 
     friend class QCameraStream;
     friend class QCameraStream_record;
@@ -740,6 +772,7 @@ private:
 
     camera_size_type* mPictureSizes;
     camera_size_type* mPreviewSizes;
+    camera_size_type* mVideoSizes;
     const camera_size_type * mPictureSizesPtr;
     HAL_camera_state_type_t mCameraState;
 
@@ -750,18 +783,25 @@ private:
     sp<PmemPool> mPostPreviewHeap;
 #endif
      mm_cameara_stream_buf_t mPrevForPostviewBuf;
-	 int mStoreMetaDataInFrame;
-	 preview_stream_ops_t *mPreviewWindow;
+     int mStoreMetaDataInFrame;
+     preview_stream_ops_t *mPreviewWindow;
      Mutex                mStateLock;
-	 int                  mPreviewState;
+     int                  mPreviewState;
+     /*preview memory with display case: memory is allocated and freed via
+     gralloc */
      QCameraHalMemory_t   mPreviewMemory;
+
+     /*preview memory without display case: memory is allocated
+      directly by camera */
+     QCameraHalHeap_t     mNoDispPreviewMemory;
+
      QCameraHalHeap_t     mSnapshotMemory;
      QCameraHalHeap_t     mThumbnailMemory;
      QCameraHalHeap_t     mRecordingMemory;
      QCameraHalHeap_t     mJpegMemory;
      QCameraHalHeap_t     mRawMemory;
-	 camera_frame_metadata_t mMetadata;
-	 camera_face_t           mFace[MAX_ROI];
+     camera_frame_metadata_t mMetadata;
+     camera_face_t           mFace[MAX_ROI];
      preview_format_info_t  mPreviewFormatInfo;
      friend void liveshot_callback(mm_camera_ch_data_buf_t *frame,void *user_data);
 
@@ -769,6 +809,7 @@ private:
      exif_tags_info_t       mExifData[MAX_EXIF_TABLE_ENTRIES];  //Exif tags for JPEG encoder
      exif_values_t          mExifValues;                        //Exif values in usable format
      int                    mExifTableNumEntries;            //NUmber of entries in mExifData
+	 int                    mNoDisplayMode;
 };
 
 }; // namespace android
