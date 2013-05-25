@@ -22,6 +22,9 @@
 #define FALSE (0)
 
 #define JPEG_EVENT_DONE      0
+#define JPEG_EVENT_WARNING   1
+#define JPEG_EVENT_ERROR     2
+#define JPEG_EVENT_ABORTED   3
 #define JPEG_EVENT_THUMBNAIL_DROPPED 4
 
 #define EXIFTAGID_GPS_LATITUDE_REF     0x10001
@@ -263,6 +266,21 @@ typedef struct {
   uint32_t size;
 } mm_camera_frame_map_type;
 
+typedef struct {
+  int ext_mode;   /* preview, main, thumbnail, video, raw, etc */
+  int frame_idx;  /* frame index */
+} mm_camera_frame_unmap_type;
+
+
+#define MAX_HDR_EXP_FRAME_NUM   5
+typedef struct {
+  unsigned long cookie;
+  int num_hdr_frames;
+  int hdr_main_idx[MAX_HDR_EXP_FRAME_NUM];
+  int hdr_thm_idx[MAX_HDR_EXP_FRAME_NUM];
+  int exp[MAX_HDR_EXP_FRAME_NUM];
+} mm_camera_hdr_start_type;
+
 
 typedef struct {
   uint32_t  in1_w;
@@ -424,8 +442,21 @@ typedef struct {
   uint32_t max_pict_height;
   uint32_t max_preview_width;
   uint32_t max_preview_height;
+  uint32_t max_video_width;
+  uint32_t max_video_height;
   uint32_t effect;
   camera_mode_t modes;
+  uint8_t preview_format;
+  uint32_t preview_sizes_cnt;
+  uint32_t thumb_sizes_cnt;
+  uint32_t video_sizes_cnt;
+  uint32_t hfr_sizes_cnt;
+  uint8_t vfe_output_enable;
+  uint8_t hfr_frame_skip;
+  uint32_t default_preview_width;
+  uint32_t default_preview_height;
+  uint32_t bestshot_reconfigure;
+  uint32_t pxlcode;
 }cam_prop_t;
 
 typedef struct {
@@ -445,7 +476,7 @@ typedef struct {
     cam_sp_len_offset_t sp;
     cam_mp_len_offset_t mp[8];
   };
-//  uint32_t frame_len;
+  uint32_t frame_len;
 } cam_frame_len_offset_t;
 
 typedef struct {
@@ -537,6 +568,7 @@ typedef enum {
   CAMERA_SET_PARM_ISO,
   CAMERA_SET_PARM_BESTSHOT_MODE,
   CAMERA_SET_PARM_ENCODE_ROTATION,
+
   CAMERA_SET_PARM_PREVIEW_FPS,
   CAMERA_SET_PARM_AF_MODE,  /* 30 */
   CAMERA_SET_PARM_HISTOGRAM,
@@ -614,31 +646,40 @@ typedef enum {
   CAMERA_SET_ASD_ENABLE,
   CAMERA_POSTPROC_ABORT,
   CAMERA_SET_AEC_MTR_AREA,
-  CAMERA_UNKNOWN1,       /*105*/
-  CAMERA_SET_FULL_LIVESHOT,
-  CAMERA_GET_LIVESHOT_CROP,
-  CAMERA_UNKNOWN_108,
-  CAMERA_UNKNOWN_109,
-  CAMERA_AWB_CALIBRATION,      /*110*/
-  CAMERA_SET_AWB_CALIBRATION_STATUS,
-  CAMERA_UNKNOWN_112,
-  CAMERA_SET_AWB_LSC_PARAM,
-  CAMERA_UNKNOWN_114,
-  CAMERA_UNKNOWN_115,     /* 115 */
-  CAMERA_UNKNOWN_116,
-  CAMERA_UNKNOWN_117,
-  CAMERA_SET_AEC_LOCK,
+  CAMERA_SET_AEC_LOCK,       /*105*/
   CAMERA_SET_AWB_LOCK,
-  CAMERA_UNKNOWN_120,  /* 120 */
-  CAMERA_UNKNOWN_121,
-  CAMERA_UNKNOWN_122,
-  CAMERA_UNKNOWN_123,
-  CAMERA_UNKNOWN_124,
-  CAMERA_UNKNOWN_125, /* 125 */
-  CAMERA_UNKNOWN_126, 
-  CAMERA_SET_HDR_MODE,
-  CAMERA_SET_BURST_MODE=0x86,
-  CAMERA_SET_PARM_FOCUS_MODE=0x88,
+  CAMERA_SET_RECORDING_HINT,
+  CAMERA_SET_PARM_CAF,
+  CAMERA_SET_FULL_LIVESHOT,
+  CAMERA_SET_DIS_ENABLE,  /*110*/
+  CAMERA_GET_PARM_MAX_HFR_MODE,
+  CAMERA_SET_LOW_POWER_MODE,
+  CAMERA_GET_PARM_DEF_PREVIEW_SIZES,
+  CAMERA_GET_PARM_DEF_VIDEO_SIZES,
+  CAMERA_GET_PARM_DEF_THUMB_SIZES, /*115*/
+  CAMERA_GET_PARM_DEF_HFR_SIZES,
+  CAMERA_GET_PARM_MAX_LIVESHOT_SIZE,
+  CAMERA_GET_PARM_FPS_RANGE,
+  CAMERA_SET_3A_CONVERGENCE,
+  CAMERA_SET_PREVIEW_HFR, /*120*/
+  CAMERA_GET_MAX_DIMENSION,
+  CAMERA_GET_MAX_NUM_FACES_DECT,
+  CAMERA_SET_CHANNEL_STREAM,
+  CAMERA_GET_CHANNEL_STREAM,
+  CAMERA_SET_PARM_CID, /*125*/
+  CAMERA_GET_PARM_FRAME_RESOLUTION,
+  CAMERA_GET_FACIAL_FEATURE_INFO,
+  CAMERA_SET_CAF_LOCK_CANCEL,
+  CAMERA_GET_PARM_HDR,
+#ifdef FAST_AF
+  CAMERA_SET_PARM_CAF_TYPE,
+#endif
+  CAMERA_GET_PARM_LUX_IDX,
+  CAMERA_GET_PARM_LOW_LIGHT_FOR_ZSL,
+  CAMERA_GET_PARM_AF_STATUS,
+  CAMERA_CHECK_AF_RETRY,
+  CAMERA_SET_LG_CAF_LOCK,
+  CAMERA_SET_INFORM_STARTPREVIEW,
   CAMERA_CTRL_PARM_MAX
 } cam_ctrl_type;
 
@@ -956,6 +997,7 @@ typedef enum {
   AF_MODE_AUTO,
   AF_MODE_CAF,
   AF_MODE_CAF_VID,
+  AF_MODE_INFINITY,
   AF_MODE_MAX
 } isp3a_af_mode_t;
 
@@ -1185,6 +1227,159 @@ typedef enum {
   FPS_MODE_AUTO,
   FPS_MODE_FIXED,
 } fps_mode_t;
+
+typedef enum {
+  CAM_SOCK_MSG_TYPE_FD_MAPPING,
+  CAM_SOCK_MSG_TYPE_FD_UNMAPPING,
+  CAM_SOCK_MSG_TYPE_WDN_START,
+  CAM_SOCK_MSG_TYPE_HIST_MAPPING,
+  CAM_SOCK_MSG_TYPE_HIST_UNMAPPING,
+  CAM_SOCK_MSG_TYPE_HDR_START,
+  CAM_SOCK_MSG_TYPE_MAX
+}mm_camera_socket_msg_type;
+
+/* Add enumenrations at the bottom but before MM_CAMERA_PARM_MAX */
+typedef enum {
+    MM_CAMERA_PARM_PICT_SIZE,
+    MM_CAMERA_PARM_ZOOM_RATIO,
+    MM_CAMERA_PARM_HISTOGRAM,
+    MM_CAMERA_PARM_DIMENSION,
+    MM_CAMERA_PARM_FPS,
+    MM_CAMERA_PARM_FPS_MODE, /*5*/
+    MM_CAMERA_PARM_EFFECT,
+    MM_CAMERA_PARM_EXPOSURE_COMPENSATION,
+    MM_CAMERA_PARM_EXPOSURE,
+    MM_CAMERA_PARM_SHARPNESS,
+    MM_CAMERA_PARM_CONTRAST, /*10*/
+    MM_CAMERA_PARM_SATURATION,
+    MM_CAMERA_PARM_BRIGHTNESS,
+    MM_CAMERA_PARM_WHITE_BALANCE,
+    MM_CAMERA_PARM_LED_MODE,
+    MM_CAMERA_PARM_ANTIBANDING, /*15*/
+    MM_CAMERA_PARM_ROLLOFF,
+    MM_CAMERA_PARM_CONTINUOUS_AF,
+    MM_CAMERA_PARM_FOCUS_RECT,
+    MM_CAMERA_PARM_AEC_ROI,
+    MM_CAMERA_PARM_AF_ROI, /*20*/
+    MM_CAMERA_PARM_HJR,
+    MM_CAMERA_PARM_ISO,
+    MM_CAMERA_PARM_BL_DETECTION,
+    MM_CAMERA_PARM_SNOW_DETECTION,
+    MM_CAMERA_PARM_BESTSHOT_MODE, /*25*/
+    MM_CAMERA_PARM_ZOOM,
+    MM_CAMERA_PARM_VIDEO_DIS,
+    MM_CAMERA_PARM_VIDEO_ROT,
+    MM_CAMERA_PARM_SCE_FACTOR,
+    MM_CAMERA_PARM_FD, /*30*/
+    MM_CAMERA_PARM_MODE,
+    /* 2nd 32 bits */
+    MM_CAMERA_PARM_3D_FRAME_FORMAT,
+    MM_CAMERA_PARM_CAMERA_ID,
+    MM_CAMERA_PARM_CAMERA_INFO,
+    MM_CAMERA_PARM_PREVIEW_SIZE, /*35*/
+    MM_CAMERA_PARM_QUERY_FALSH4SNAP,
+    MM_CAMERA_PARM_FOCUS_DISTANCES,
+    MM_CAMERA_PARM_BUFFER_INFO,
+    MM_CAMERA_PARM_JPEG_ROTATION,
+    MM_CAMERA_PARM_JPEG_MAINIMG_QUALITY, /* 40 */
+    MM_CAMERA_PARM_JPEG_THUMB_QUALITY,
+    MM_CAMERA_PARM_ZSL_ENABLE,
+    MM_CAMERA_PARM_FOCAL_LENGTH,
+    MM_CAMERA_PARM_HORIZONTAL_VIEW_ANGLE,
+    MM_CAMERA_PARM_VERTICAL_VIEW_ANGLE, /* 45 */
+    MM_CAMERA_PARM_MCE,
+    MM_CAMERA_PARM_RESET_LENS_TO_INFINITY,
+    MM_CAMERA_PARM_SNAPSHOTDATA,
+    MM_CAMERA_PARM_HFR,
+    MM_CAMERA_PARM_REDEYE_REDUCTION, /* 50 */
+    MM_CAMERA_PARM_WAVELET_DENOISE,
+    MM_CAMERA_PARM_3D_DISPLAY_DISTANCE,
+    MM_CAMERA_PARM_3D_VIEW_ANGLE,
+    MM_CAMERA_PARM_PREVIEW_FORMAT,
+    MM_CAMERA_PARM_RDI_FORMAT,
+    MM_CAMERA_PARM_HFR_SIZE, /* 55 */
+    MM_CAMERA_PARM_3D_EFFECT,
+    MM_CAMERA_PARM_3D_MANUAL_CONV_RANGE,
+    MM_CAMERA_PARM_3D_MANUAL_CONV_VALUE,
+    MM_CAMERA_PARM_ENABLE_3D_MANUAL_CONVERGENCE,
+    /* These are new parameters defined here */
+    MM_CAMERA_PARM_CH_IMAGE_FMT, /* 60 */       // mm_camera_ch_image_fmt_parm_t
+    MM_CAMERA_PARM_OP_MODE,             // camera state, sub state also
+    MM_CAMERA_PARM_SHARPNESS_CAP,       //
+    MM_CAMERA_PARM_SNAPSHOT_BURST_NUM,  // num shots per snapshot action
+    MM_CAMERA_PARM_LIVESHOT_MAIN,       // enable/disable full size live shot
+    MM_CAMERA_PARM_MAXZOOM, /* 65 */
+    MM_CAMERA_PARM_LUMA_ADAPTATION,     // enable/disable
+    MM_CAMERA_PARM_HDR,
+    MM_CAMERA_PARM_CROP,
+    MM_CAMERA_PARM_MAX_PICTURE_SIZE,
+    MM_CAMERA_PARM_MAX_PREVIEW_SIZE, /* 70 */
+    MM_CAMERA_PARM_ASD_ENABLE,
+    MM_CAMERA_PARM_RECORDING_HINT,
+    MM_CAMERA_PARM_CAF_ENABLE,
+    MM_CAMERA_PARM_FULL_LIVESHOT,
+    MM_CAMERA_PARM_DIS_ENABLE, /* 75 */
+    MM_CAMERA_PARM_AEC_LOCK,
+    MM_CAMERA_PARM_AWB_LOCK,
+    MM_CAMERA_PARM_AF_MTR_AREA,
+    MM_CAMERA_PARM_AEC_MTR_AREA,
+    MM_CAMERA_GET_PARM_LOW_LIGHT_FOR_ZSL,
+    MM_CAMERA_PARM_LOW_POWER_MODE,
+    MM_CAMERA_PARM_MAX_HFR_MODE, /* 80 */
+    MM_CAMERA_PARM_MAX_VIDEO_SIZE,
+    MM_CAMERA_PARM_DEF_PREVIEW_SIZES,
+    MM_CAMERA_PARM_DEF_VIDEO_SIZES,
+    MM_CAMERA_PARM_DEF_THUMB_SIZES,
+    MM_CAMERA_PARM_DEF_HFR_SIZES,
+    MM_CAMERA_PARM_PREVIEW_SIZES_CNT,
+    MM_CAMERA_PARM_VIDEO_SIZES_CNT,
+    MM_CAMERA_PARM_THUMB_SIZES_CNT,
+    MM_CAMERA_PARM_HFR_SIZES_CNT,
+    MM_CAMERA_PARM_GRALLOC_USAGE,
+    MM_CAMERA_PARM_VFE_OUTPUT_ENABLE, //to check whether both oputputs are
+    MM_CAMERA_PARM_DEFAULT_PREVIEW_WIDTH,
+    MM_CAMERA_PARM_DEFAULT_PREVIEW_HEIGHT,
+    MM_CAMERA_PARM_FOCUS_MODE,
+    MM_CAMERA_PARM_HFR_FRAME_SKIP,
+    MM_CAMERA_PARM_CH_INTERFACE,
+    //or single output enabled to differentiate 7x27a with others
+    MM_CAMERA_PARM_BESTSHOT_RECONFIGURE,
+    MM_CAMERA_PARM_MAX_NUM_FACES_DECT,
+    MM_CAMERA_PARM_FPS_RANGE,
+    MM_CAMERA_PARM_CID,
+    MM_CAMERA_PARM_FRAME_RESOLUTION,
+    MM_CAMERA_PARM_RAW_SNAPSHOT_FMT,
+    MM_CAMERA_PARM_FACIAL_FEATURE_INFO,
+    MM_CAMERA_PARM_CAF_LOCK_CANCEL,
+#ifdef FAST_AF
+    MM_CAMERA_PARM_CAF_TYPE,
+#endif
+    MM_CAMERA_PARM_LUX_IDX,
+    MM_CAMERA_PARM_GET_AF_STATUS,
+    MM_CAMERA_PARM_CHECK_AF_RETRY,
+    MM_CAMERA_PARM_LG_CAF_LOCK,
+    MM_CAMERA_PARM_INFORM_STARTPRVIEW,
+    MM_CAMERA_PARM_SNAP_PRIORITY,
+    MM_CAMERA_PARM_MAX
+} mm_camera_parm_type_t;
+
+#define MM_MAX_WDN_NUM 2
+typedef struct {
+  unsigned long cookie;
+  int num_frames;
+  int ext_mode[MM_MAX_WDN_NUM];
+  int frame_idx[MM_MAX_WDN_NUM];
+} mm_camera_wdn_start_type;
+
+typedef struct {
+  mm_camera_socket_msg_type msg_type;
+  union {
+    mm_camera_frame_map_type frame_fd_map;
+    mm_camera_frame_unmap_type frame_fd_unmap;
+    mm_camera_wdn_start_type wdn_start;
+    mm_camera_hdr_start_type hdr_pkg;
+  } payload;
+} cam_sock_packet_t;
 
 typedef struct {
   int32_t minimum_value; /* Minimum allowed value */
@@ -1520,6 +1715,7 @@ typedef struct {
 } mm_camera_histo_mem_info_t;
 
 typedef struct {
+  uint32_t index;
   uint32_t cookie;
   uint32_t histo_info;
   uint32_t histo_len;
