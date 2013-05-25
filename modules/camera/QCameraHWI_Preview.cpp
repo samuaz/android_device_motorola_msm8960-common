@@ -1339,7 +1339,7 @@ end:
     (void)cam_evt_register_buf_notify(mCameraId, MM_CAMERA_CH_PREVIEW,
                                       NULL,
                                       (mm_camera_register_buf_cb_type_t)NULL,
-                                      NULL,
+                                      0,
                                       NULL);
     mInit = false;
     ALOGE("%s: END", __func__);
