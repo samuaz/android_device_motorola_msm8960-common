@@ -228,6 +228,7 @@ bool register_record_buffers(bool register_buffer) {
     return true;
 }
 #endif
+#ifndef USE_ION
 PmemPool::PmemPool(const char *pmem_pool,
                                            int flags,
                                            int pmem_type,
@@ -364,6 +365,8 @@ PmemPool::~PmemPool()
 #endif
     ALOGI("%s: %s X", __FUNCTION__, mName);
 }
+#endif
+
 MemPool::~MemPool()
 {
     ALOGV("destroying MemPool %s", mName);
