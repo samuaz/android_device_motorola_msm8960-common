@@ -22,28 +22,18 @@ MAKEFILE=../../../$OUTDIR/$VENDORDEVICEDIR-vendor-blobs.mk
 
 LOCAL_PATH := vendor/$VENDOR/$VENDORDEVICEDIR
 
-# Prebuilt libraries that are needed to build open-source libraries
-#PRODUCT_COPY_FILES := \\
-#    $OUTDIR/proprietary/lib/libMali.so:obj/lib/libMali.so \\
-#    $OUTDIR/proprietary/lib/libUMP.so:obj/lib/libUMP.so \\
-
-#\$(shell mkdir -p out/target/product/zatab/obj/SHARED_LIBRARIES/libMali_intermediates)
-#\$(shell mkdir -p out/target/product/zatab/obj/SHARED_LIBRARIES/libUMP_intermediates)
-#\$(shell touch out/target/product/zatab/obj/SHARED_LIBRARIES/libMali_intermediates/export_includes)
-#\$(shell touch out/target/product/zatab/obj/SHARED_LIBRARIES/libUMP_intermediates/export_includes)
-
 -include device/${VENDOR}/${DEVICE}/prebuilt.mk
 
 EOF
 
 LINEEND=" \\"
-COUNT=`cat ../${DEVICE}/proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app' | wc -l | awk {'print $1'}`
+COUNT=`cat ../${DEVICE}/device-proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app' | wc -l | awk {'print $1'}`
 if [ $COUNT -gt 0 ]; then
 cat <<EOF >> $MAKEFILE
 PRODUCT_COPY_FILES += \\
 EOF
 fi
-for FILE in `cat ../${DEVICE}/proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app'`; do
+for FILE in `cat ../${DEVICE}/device-proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app'`; do
     COUNT=`expr $COUNT - 1`
     if [ $COUNT = "0" ]; then
         LINEEND=""
@@ -52,13 +42,13 @@ for FILE in `cat ../${DEVICE}/proprietary-files.txt | grep -v ^# | cut -f1 -d '#
 done
 
 LINEEND=" \\"
-COUNT=`cat ../msm8960-common/proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app' | wc -l | awk {'print $1'}`
+COUNT=`cat ../msm8960-common/common-proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app' | wc -l | awk {'print $1'}`
 if [ $COUNT -gt 0 ]; then
 cat << EOF >> $MAKEFILE
 PRODUCT_COPY_FILES += \\
 EOF
 fi
-for FILE in `cat ../msm8960-common/proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app'`; do
+for FILE in `cat ../msm8960-common/common-proprietary-files.txt | grep -v ^# | cut -f1 -d '#' | grep -ve '^$\|^app'`; do
     COUNT=`expr $COUNT - 1`
     if [ $COUNT = "0" ]; then
         LINEEND=""
@@ -130,6 +120,8 @@ LOCAL_PATH:= \$(call my-dir)
 
 EOF
 
+echo "ifeq (\$(TARGET_DEVICE),$DEVICE)" >> ../../../${OUTDIR}/packages/Android.mk
+
 for APK in `ls ../../../${OUTDIR}/packages/*apk`; do
     apkname=`basename $APK`
     modulename=`echo $apkname|sed -e 's/\.apk$//gi'`
@@ -143,6 +135,9 @@ LOCAL_MODULE_CLASS := APPS
 LOCAL_MODULE_SUFFIX := \$(COMMON_ANDROID_PACKAGE_SUFFIX)
 include \$(BUILD_PREBUILT)
 EOF
+
+echo "endif" >> ../../../${OUTDIR}/packages/Android.mk
+
     echo "PRODUCT_PACKAGES += $modulename" >> ../../../$OUTDIR/$VENDORDEVICEDIR-vendor.mk
 done
 fi

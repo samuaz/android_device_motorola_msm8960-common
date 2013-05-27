@@ -50,6 +50,7 @@ PRODUCT_PACKAGES += \
     audio.r_submix.default \
     alsa.msm8960 \
     libalsa-intf \
+    libaudio-resampler \
     libaudioutils \
     aplay \
     amix \
@@ -290,6 +291,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Radio and Telephony
 PRODUCT_PROPERTY_OVERRIDES += \
 	rild.libpath=/system/lib/libril-qc-qmi-1.so \
+	ro.telephony.ril_class=MotorolaQualcommRIL \
 	ril.subscription.types=NV,RUIM \
 	keyguard.no_require_sim=true \
 	ro.use_data_netmgrd=true \
@@ -300,8 +302,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	persist.audio.vr.enable=false \
 	ro.qc.sdk.audio.fluencetype=fluence \
 	persist.audio.handset.mic=digital \
-	ro.config.vc_call_vol_steps=7 \
-	persist.timed.enable=true
+	ro.config.vc_call_vol_steps=7
 
 # SELinux status
 PRODUCT_PROPERTY_OVERRIDES += \
