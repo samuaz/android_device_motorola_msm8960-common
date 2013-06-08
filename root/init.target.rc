@@ -99,12 +99,6 @@ on early-boot
     setprop ro.sys.atvc_allow_ap_mot_log 0
     setprop ro.sys.atvc_allow_simswap 0
 
-    # Need to launch qseecomd before enc_mgt_tool
-    start qseecomd
-
-    # Need to launch enc_mgt_tool to create device key and signature for vold to set up sd card
-    start enc_tool
-
 on fs
     mount_all /fstab.qcom
 
@@ -145,9 +139,6 @@ on post-fs-data
     #initialize wlan
     write /dev/wcnss_wlan 1
     write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
-
-# directory for encryption management tool, enc_mgt_tool
-    mkdir /data/emt 0770 root system
 
 # To remove apanic proc entry
     write /proc/apanic_console 1
@@ -508,10 +499,10 @@ service kickstart /system/bin/qcks l
     oneshot
     disabled
 
-service qseecomd /system/bin/qseecomd
-   class core
-   user system
-   group system
+#service qseecomd /system/bin/qseecomd
+#   class core
+#   user system
+#   group system
 
 service batt_health /system/bin/batt_health
     class main
@@ -597,12 +588,6 @@ service stop_fd  /system/bin/sh /system/bin/am broadcast -a  com.motorola.fastdo
     group system
     oneshot
 
-# Define the enc_mgt_tool as a service here instead of using exec commands
-service enc_tool /system/bin/enc_mgt_tool
-    disabled
-    user root
-    oneshot
-
 #Trigger FastDormancy service start when network type is changed to UMTS
 on property:gsm.network.type="UMTS:3"
     start start_fd
@@ -658,20 +643,6 @@ on property:tcmd.whisper=3
 
 on property:tcmd.whisper=4
     start whisperd
-
-# start the enc_mgt_tool to set the keysig when decrypted userdata partition is mounted
-on property:vold.decrypt=trigger_restart_framework
-    start enc_tool
-
-# Check available storage space to execute device encryption or decryption
-on property:sys.mot.encrypt.test=1
-    exec /system/bin/enc_mgt_tool --test
-    setprop sys.mot.encrypt.test ""
-
-# Handle device encryption key protection request
-on property:sys.mot.encrypt.pass.prot=1
-    exec /system/bin/enc_mgt_tool --password_prot
-    setprop sys.mot.encrypt.pass.prot ""
 
 # VMware MVP Hypervisor daemon
 service mvpd /system/bin/mvpd -F
