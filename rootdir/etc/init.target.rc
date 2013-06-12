@@ -155,8 +155,9 @@ on post-fs-data
     insmod /system/lib/modules/cfg80211.ko
     insmod /system/lib/modules/tcp_westwood.ko
     #initialize wlan
-    write /dev/wcnss_wlan 1
-    write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
+# FIXME-HASH: Removed, crashing us early for some reason
+#    write /dev/wcnss_wlan 1
+#    write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
 
 # To remove apanic proc entry
     write /proc/apanic_console 1
