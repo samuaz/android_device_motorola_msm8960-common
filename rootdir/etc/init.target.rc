@@ -165,7 +165,7 @@ on post-fs-data
 on boot
    write /sys/devices/i2c-3/3-0024/cyttsp_update_fw 1
    write /sys/devices/i2c-3/3-005b/update_fw 1
-   start qcamerasvr
+#   start qcamerasvr
 
    # Backlight permissions
    chown system system /sys/class/backlight/lcd-backlight/brightness
@@ -360,10 +360,10 @@ on post-fs-data
    mkdir /tombstones/mdm2 0771 system system
 
 #start camera server as daemon
-service qcamerasvr /system/bin/logwrapper /system/bin/qcamerasrvwrapper.sh
-    class late_start
-    user media
-    group system camera inet input graphics
+#service qcamerasvr /system/bin/logwrapper /system/bin/qcamerasrvwrapper.sh
+#    class late_start
+#    user media
+#    group system camera inet input graphics
 
 #start camera server as daemon
 #service qcamerasvr /system/bin/mm-qcamera-daemon
