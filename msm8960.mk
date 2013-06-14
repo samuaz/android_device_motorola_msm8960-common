@@ -65,7 +65,6 @@ PRODUCT_PACKAGES += \
 
 # Misc
 PRODUCT_PACKAGES += \
-	WCNSS_qcom_wlan_nv.bin \
 	tcpdump \
     Torch \
     libxml2
@@ -115,9 +114,7 @@ PRODUCT_PACKAGES += \
 
 # Wifi
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/config/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
-	$(LOCAL_PATH)/config/WCNSS_cfg.dat:system/etc/firmware/wlan/prima/WCNSS_cfg.dat \
-	$(LOCAL_PATH)/config/WCNSS_qcom_cfg.ini:system/etc/firmware/wlan/prima/WCNSS_qcom_cfg.ini
+	$(LOCAL_PATH)/config/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
 
 # Ramdisk
 PRODUCT_PACKAGES += \
@@ -213,7 +210,10 @@ PRODUCT_PACKAGES += \
 
 #wifi
 PRODUCT_PACKAGES += \
-	libnetcmdiface
+	libnetcmdiface \
+	WCNSS_cfg.dat \
+	WCNSS_qcom_cfg.ini \
+	WCNSS_qcom_wlan_nv.bin
 
 # QC Perf
 PRODUCT_PROPERTY_OVERRIDES += \
