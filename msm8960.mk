@@ -141,7 +141,9 @@ PRODUCT_PACKAGES += \
     init.qcom.post_boot.sh \
     init.qcom.sh \
     init.qcom.syspart_fixup.sh \
-    init.qcom.lpm_boot.sh
+    init.qcom.lpm_boot.sh \
+    init.qcom.wifi.sh \
+    init.crda.sh
 
 # Scripts
 PRODUCT_COPY_FILES += \
