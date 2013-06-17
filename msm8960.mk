@@ -55,19 +55,19 @@ PRODUCT_PACKAGES += \
 
 # Motorola
 PRODUCT_PACKAGES += \
-	aplogd \
-	modemlog \
-	batt_health \
-	charge_only_mode \
-	graphicsd \
-	mot_boot_mode \
-	libxt_native.so
+    aplogd \
+    modemlog \
+    batt_health \
+    charge_only_mode \
+    graphicsd \
+    mot_boot_mode \
+    libxt_native.so
 
 # Misc
 PRODUCT_PACKAGES += \
-	tcpdump \
-    Torch \
-    libxml2
+    libxml2 \
+    tcpdump \
+    Torch
 
 # Lights
 PRODUCT_PACKAGES += lights.msm8960
@@ -80,8 +80,8 @@ PRODUCT_PACKAGES += qrngd
 
 # Bluetooth
 PRODUCT_PACKAGES += \
-            hciconfig \
-            hcitool
+    hciconfig \
+    hcitool
 
 PRODUCT_COPY_FILES += $(LOCAL_PATH)/modules/bluetooth/bt_vendor.conf:system/etc/bluetooth/bt_vendor.conf
 
@@ -95,10 +95,10 @@ PRODUCT_PACKAGES += \
 
 # GPS
 PRODUCT_PACKAGES += \
-	libloc_adapter \
-	libloc_eng \
-	libgps.utils \
-	gps.msm8960
+    libloc_adapter \
+    libloc_eng \
+    libgps.utils \
+    gps.msm8960
 
 # Misc
 PRODUCT_PACKAGES += \
@@ -115,7 +115,7 @@ PRODUCT_PACKAGES += \
 
 # Wifi
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/config/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
+    $(LOCAL_PATH)/config/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf
 
 # Ramdisk
 PRODUCT_PACKAGES += \
@@ -139,29 +139,28 @@ PRODUCT_PACKAGES += \
     init.qcom.post_boot.sh \
     init.qcom.sh \
     init.qcom.syspart_fixup.sh \
-    init.qcom.lpm_boot.sh \
     init.qcom.wifi.sh \
     init.crda.sh
 
 # Scripts
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/scripts/mount_pds.sh:system/bin/mount_pds.sh \
-	$(LOCAL_PATH)/scripts/qcamerasrvwrapper.sh:system/bin/qcamerasrvwrapper.sh \
-	$(LOCAL_PATH)/scripts/sensorsqcomwrapper.sh:system/bin/sensorsqcomwrapper.sh \
+    $(LOCAL_PATH)/scripts/mount_pds.sh:system/bin/mount_pds.sh \
+    $(LOCAL_PATH)/scripts/qcamerasrvwrapper.sh:system/bin/qcamerasrvwrapper.sh \
+    $(LOCAL_PATH)/scripts/sensorsqcomwrapper.sh:system/bin/sensorsqcomwrapper.sh \
 
 # Audio configuration
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/config/audio_policy.conf:system/etc/audio_policy.conf \
-	$(LOCAL_PATH)/config/snd_soc_msm_2x:system/etc/snd_soc_msm/snd_soc_msm_2x
+    $(LOCAL_PATH)/config/audio_policy.conf:system/etc/audio_policy.conf \
+    $(LOCAL_PATH)/config/snd_soc_msm_2x:system/etc/snd_soc_msm/snd_soc_msm_2x
 
 # Media config
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/config/media_profiles.xml:system/etc/media_profiles.xml \
-	$(LOCAL_PATH)/config/media_codecs.xml:system/etc/media_codecs.xml
+    $(LOCAL_PATH)/config/media_profiles.xml:system/etc/media_profiles.xml \
+    $(LOCAL_PATH)/config/media_codecs.xml:system/etc/media_codecs.xml
 
 # Vold configuration
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/config/vold.fstab:system/etc/vold.fstab
+    $(LOCAL_PATH)/config/vold.fstab:system/etc/vold.fstab
 
 # We have enough storage space to hold precise GC data
 PRODUCT_TAGS += dalvik.gc.type-precise
@@ -172,14 +171,14 @@ PRODUCT_COPY_FILES += \
 
 # QCOM Display
 PRODUCT_PROPERTY_OVERRIDES += \
-	debug.egl.hw=1 \
-	debug.sf.hw=1 \
-	persist.sys.ui.hw=true \
-	debug.composition.type=dyn \
-	persist.hwc.mdpcomp.enable=true \
-	debug.mdpcomp.logs=0 \
-	debug.enabletr=0 \
-	ro.hwui.text_cache_width=2048
+    debug.egl.hw=1 \
+    debug.sf.hw=1 \
+    persist.sys.ui.hw=true \
+    debug.composition.type=dyn \
+    persist.hwc.mdpcomp.enable=true \
+    debug.mdpcomp.logs=0 \
+    debug.enabletr=0 \
+    ro.hwui.text_cache_width=2048
 
 # QCOM Display
 PRODUCT_PACKAGES += \
@@ -211,10 +210,10 @@ PRODUCT_PACKAGES += \
 
 #wifi
 PRODUCT_PACKAGES += \
-	libnetcmdiface \
-	WCNSS_cfg.dat \
-	WCNSS_qcom_cfg.ini \
-	WCNSS_qcom_wlan_nv.bin
+    libnetcmdiface \
+    WCNSS_cfg.dat \
+    WCNSS_qcom_cfg.ini \
+    WCNSS_qcom_wlan_nv.bin
 
 # QC Perf
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -257,30 +256,30 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 #misc
 PRODUCT_PROPERTY_OVERRIDES += \
-	persist.fuse_sdcard=true \
-	ro.usb.mtp=0x2e32 \
-	ro.usb.mtp_adb=0x2e33 \
-	ro.usb.ptp=0x2e30 \
-	ro.usb.ptp_adb=0x2e31 \
-	ro.hdmi.enable=true
+    persist.fuse_sdcard=true \
+    ro.usb.mtp=0x2e32 \
+    ro.usb.mtp_adb=0x2e33 \
+    ro.usb.ptp=0x2e30 \
+    ro.usb.ptp_adb=0x2e31 \
+    ro.hdmi.enable=true
 
 #wifi
 PRODUCT_PROPERTY_OVERRIDES += \
-	persist.sys.qc.sub.rstrtlvl=3 \
-	persist.sys.qc.sub.rdump.on=1 \
-	persist.sys.qc.sub.rdump.max=20
+    persist.sys.qc.sub.rstrtlvl=3 \
+    persist.sys.qc.sub.rdump.on=1 \
+    persist.sys.qc.sub.rdump.max=20
 
 # Radio and Telephony
 PRODUCT_PROPERTY_OVERRIDES += \
-	rild.libpath=/system/lib/libril-qc-qmi-1.so \
-	ro.telephony.ril_class=MotorolaQualcommRIL \
-	ril.subscription.types=NV,RUIM \
-	keyguard.no_require_sim=true \
-	ro.use_data_netmgrd=true \
-	ro.ril.transmitpower=true \
-	persist.radio.apm_sim_not_pwdn=1 \
-	persist.radio.call_type=1 \
-	ro.config.vc_call_vol_steps=7
+    rild.libpath=/system/lib/libril-qc-qmi-1.so \
+    ro.telephony.ril_class=MotorolaQualcommRIL \
+    ril.subscription.types=NV,RUIM \
+    keyguard.no_require_sim=true \
+    ro.use_data_netmgrd=true \
+    ro.ril.transmitpower=true \
+    persist.radio.apm_sim_not_pwdn=1 \
+    persist.radio.call_type=1 \
+    ro.config.vc_call_vol_steps=7
 
 # Wifi
 PRODUCT_PROPERTY_OVERRIDES += \
