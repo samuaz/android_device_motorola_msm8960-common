@@ -134,6 +134,8 @@ PRODUCT_PACKAGES += \
 
 # Init scripts
 PRODUCT_PACKAGES += \
+    init.crda.sh \
+    init.qcom.bt.sh \
     init.qcom.class_core.sh \
     init.qcom.class_main.sh \
     init.qcom.coex.sh \
@@ -145,8 +147,7 @@ PRODUCT_PACKAGES += \
     init.qcom.post_boot.sh \
     init.qcom.sh \
     init.qcom.syspart_fixup.sh \
-    init.qcom.usb.sh \
-    init.crda.sh
+    init.qcom.usb.sh
 
 # Scripts
 PRODUCT_COPY_FILES += \
@@ -265,7 +266,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.usb.mtp_adb=0x2e33 \
     ro.usb.ptp=0x2e30 \
     ro.usb.ptp_adb=0x2e31 \
-    ro.hdmi.enable=true
+    ro.hdmi.enable=true \
+    lockscreen.rot_override=true
 
 #wifi
 PRODUCT_PROPERTY_OVERRIDES += \
