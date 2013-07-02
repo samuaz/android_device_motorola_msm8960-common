@@ -221,4 +221,7 @@
     <!-- When true use the linux /dev/input/event subsystem to detect the switch changes
         on the headphone/microphone jack. When false use the older uevent framework. -->
     <bool name="config_useDevInputEventForAudioJack">true</bool>
+
+    <!-- We dont have different firmware for wifi modes, prevent reloading it -->
+    <bool name="config_wifiApFirmwareReload">false</bool>
 </resources>
