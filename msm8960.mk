@@ -140,7 +140,8 @@ PRODUCT_PACKAGES += \
     init.qcom.post_boot.sh \
     init.qcom.sh \
     init.qcom.syspart_fixup.sh \
-    init.qcom.usb.sh
+    init.qcom.usb.sh \
+    init_wlan.sh
 
 # Scripts
 PRODUCT_COPY_FILES += \

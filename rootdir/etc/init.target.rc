@@ -119,6 +119,7 @@ on fs
     mount_all /fstab.qcom
 
 on post-fs
+    chmod 755 /system/etc/init.crda.sh
     chmod 755 /system/etc/init.qcom.bt.sh
     chmod 755 /system/etc/init.qcom.coex.sh
     chmod 755 /system/etc/init.qcom.efs.sync.sh
@@ -126,6 +127,7 @@ on post-fs
     chmod 755 /system/etc/init.qcom.modem_links.sh
     chmod 755 /system/etc/init.qcom.post_boot.sh
     chmod 755 /system/etc/init.qcom.sdio.sh
+    chmod 755 /system/etc/init_wlan.sh
     chmod 755 /system/bin/qcamerasrvwrapper.sh
  
     mkdir /tombstones/modem 0771 system system
