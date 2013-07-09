@@ -270,6 +270,16 @@ on property:bluetooth.isEnabled=true
     start btwlancoex
     write /sys/class/bluetooth/hci0/idle_timeout 7000
 
+service unblock_wakelock /system/bin/sh /system/etc/unblock_wakelock.sh
+    class late_start
+    user root
+    group root
+    disabled
+    oneshot
+
+on property:init.svc.sensorservice=running
+    start unblock_wakelock
+
 service qcom-c_core-sh /system/bin/sh /init.qcom.class_core.sh
     class core
     user root
@@ -331,7 +341,7 @@ service netmgrd /system/bin/netmgrd
     disabled
 
 service sensors /system/bin/sensorsqcomwrapper.sh
-    class late_start
+    class main
     user root
     group root
     disabled

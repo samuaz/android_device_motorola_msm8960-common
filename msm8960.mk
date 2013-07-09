@@ -63,9 +63,9 @@ PRODUCT_PACKAGES += \
     mot_boot_mode \
     libxt_native.so
 
+#    DevicePerformanceSettingsHelper \
 # Misc
 PRODUCT_PACKAGES += \
-    DevicePerformanceSettingsHelper \
     libxml2 \
     tcpdump \
     Torch
@@ -182,7 +182,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.hwc.mdpcomp.enable=true \
     debug.mdpcomp.logs=0 \
     debug.enabletr=0 \
-    ro.hwui.text_cache_width=2048
+    ro.hwui.text_cache_width=2048 \
+    ro.qc.sensors.wl_dis=true
 
 # QCOM Display
 PRODUCT_PACKAGES += \
