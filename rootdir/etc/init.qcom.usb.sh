@@ -104,10 +104,10 @@ case "$bootmode" in
             *)
                 case "$buildtype" in
                     "user" )
-                        setprop persist.sys.usb.config mtp
+                        setprop persist.sys.usb.config mass_storage
                     ;;
                     * )
-                        setprop persist.sys.usb.config mtp,adb
+                        setprop persist.sys.usb.config mass_storage,adb
                     ;;
                 esac
             ;;
