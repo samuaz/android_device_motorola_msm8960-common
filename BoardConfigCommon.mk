@@ -79,6 +79,7 @@ BOARD_HAS_LARGE_FILESYSTEM := true
 # Inline kernel building
 TARGET_KERNEL_SOURCE := kernel/motorola/msm8960-common
 TARGET_KERNEL_CONFIG := msm8960_mmi_defconfig
+TARGET_KERNEL_VARIANT_CONFIG := msm8960_mmi_phablet_defconfig
 #TARGET_KERNEL_SELINUX_CONFIG := msm8960_mmi_selinux_defconfig
 BOARD_KERNEL_CMDLINE := console=/dev/null androidboot.hardware=qcom user_debug=31 loglevel=1 zcache
 BOARD_KERNEL_BASE := 0x80200000
@@ -162,3 +163,7 @@ TW_EXTERNAL_STORAGE_PATH := "/external_sd"
 TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
 RECOVERY_SDCARD_ON_DATA := true
 TARGET_RECOVERY_INITRC := $(LOCAL_PATH)/init.recovery.rc
+
+# Ubuntu boot.img
+BOARD_CUSTOM_BOOTIMG_MK := $(LOCAL_PATH)/boot.mk
+
