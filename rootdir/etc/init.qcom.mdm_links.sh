@@ -34,13 +34,13 @@ export PATH
 
 MDM_IMAGES=/firmware/image
 cd $MDM_IMAGES
-ln -s $MDM_IMAGES/apps.mbn /system/etc/firmware/apps.mbn 2>/dev/null
+#ln -s $MDM_IMAGES/apps.mbn /system/etc/firmware/apps.mbn 2>/dev/null
 ln -s $MDM_IMAGES/dsp1.mbn /system/etc/firmware/dsp1.mbn 2>/dev/null
 ln -s $MDM_IMAGES/dsp2.mbn /system/etc/firmware/dsp2.mbn 2>/dev/null
 ln -s $MDM_IMAGES/dsp3.mbn /system/etc/firmware/dsp3.mbn 2>/dev/null
-ln -s $MDM_IMAGES/rpm.mbn  /system/etc/firmware/rpm.mbn  2>/dev/null
-ln -s $MDM_IMAGES/sbl1.mbn /system/etc/firmware/sbl1.mbn 2>/dev/null
-ln -s $MDM_IMAGES/sbl2.mbn /system/etc/firmware/sbl2.mbn 2>/dev/null
+#ln -s $MDM_IMAGES/rpm.mbn  /system/etc/firmware/rpm.mbn  2>/dev/null
+#ln -s $MDM_IMAGES/sbl1.mbn /system/etc/firmware/sbl1.mbn 2>/dev/null
+#ln -s $MDM_IMAGES/sbl2.mbn /system/etc/firmware/sbl2.mbn 2>/dev/null
 ln -s $MDM_IMAGES/efs1.mbn /system/etc/firmware/efs1.mbn 2>/dev/null
 ln -s $MDM_IMAGES/efs2.mbn /system/etc/firmware/efs2.mbn 2>/dev/null
 ln -s $MDM_IMAGES/efs3.mbn /system/etc/firmware/efs3.mbn 2>/dev/null
