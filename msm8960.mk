@@ -213,7 +213,8 @@ PRODUCT_PACKAGES += \
     libnetcmdiface \
     WCNSS_cfg.dat \
     WCNSS_qcom_cfg.ini \
-    WCNSS_qcom_wlan_nv.bin
+    WCNSS_qcom_wlan_nv.bin \
+    wcnss_service
 
 # QC Perf
 PRODUCT_PROPERTY_OVERRIDES += \
