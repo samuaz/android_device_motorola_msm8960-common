@@ -127,11 +127,6 @@ on post-fs
     chmod 755 /system/etc/init.qcom.post_boot.sh
     chmod 755 /system/etc/init.qcom.sdio.sh
     chmod 755 /system/bin/qcamerasrvwrapper.sh
- 
-    mkdir /tombstones/modem 0771 system system
-    mkdir /tombstones/lpass 0771 system system
-    mkdir /tombstones/wcnss 0771 system system
-    mkdir /tombstones/dsps 0771 system system
 
     wait /dev/block/platform/msm_sdcc.1/by-name/pds
     exec /system/bin/mount_pds.sh
@@ -153,8 +148,6 @@ on post-fs-data
     #load modules
     insmod /system/lib/modules/cfg80211.ko
     insmod /system/lib/modules/tcp_westwood.ko
-    #initialize wlan
-    write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
 
 # To remove apanic proc entry
     write /proc/apanic_console 1
@@ -553,3 +546,9 @@ on property:service.adb.root=1
     write /sys/class/android_usb/android0/enable 0
     restart adbd
     write /sys/class/android_usb/android0/enable 1
+
+service wcnss-service /system/bin/wcnss_service
+    class late_start
+    user system
+    group system wifi
+    oneshot
