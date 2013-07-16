@@ -163,7 +163,3 @@ TW_EXTERNAL_STORAGE_PATH := "/external_sd"
 TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
 RECOVERY_SDCARD_ON_DATA := true
 TARGET_RECOVERY_INITRC := $(LOCAL_PATH)/init.recovery.rc
-
-# Ubuntu boot.img
-BOARD_CUSTOM_BOOTIMG_MK := $(LOCAL_PATH)/boot.mk
-
