@@ -153,10 +153,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/gps/gps.conf:system/etc/gps.conf
 
-# Ubuntu bootimage
-PRODUCT_COPY_FILES += \
-    $(OUT)/ubuntu-boot.img:/system/etc/ubuntu-boot.img
-
 # Audio configuration
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/config/audio_policy.conf:system/etc/audio_policy.conf \
