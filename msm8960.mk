@@ -20,6 +20,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.camera.front.xml:system/etc/permissions/android.hardware.camera.front.xml \
     frameworks/native/data/etc/android.hardware.location.gps.xml:system/etc/permissions/android.hardware.location.gps.xml \
     frameworks/native/data/etc/android.hardware.wifi.xml:system/etc/permissions/android.hardware.wifi.xml \
+    frameworks/native/data/etc/android.hardware.wifi.direct.xml:system/etc/permissions/android.hardware.wifi.direct.xml \
     frameworks/native/data/etc/android.hardware.sensor.proximity.xml:system/etc/permissions/android.hardware.sensor.proximity.xml \
     frameworks/native/data/etc/android.hardware.sensor.light.xml:system/etc/permissions/android.hardware.sensor.light.xml \
     frameworks/native/data/etc/android.hardware.sensor.gyroscope.xml:system/etc/permissions/android.hardware.sensor.gyroscope.xml \
@@ -65,6 +66,7 @@ PRODUCT_PACKAGES += \
 
 # Misc
 PRODUCT_PACKAGES += \
+    DevicePerformanceSettingsHelper \
     libxml2 \
     tcpdump \
     Torch
@@ -148,7 +150,7 @@ PRODUCT_COPY_FILES += \
 
 # GPS configuration
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/gps/gps.conf:system/etc/gps.conf
+    $(LOCAL_PATH)/config/gps.conf:system/etc/gps.conf
 
 # Audio configuration
 PRODUCT_COPY_FILES += \
@@ -159,10 +161,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/config/media_profiles.xml:system/etc/media_profiles.xml \
     $(LOCAL_PATH)/config/media_codecs.xml:system/etc/media_codecs.xml
-
-# Vold configuration
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/config/vold.fstab:system/etc/vold.fstab
 
 # We have enough storage space to hold precise GC data
 PRODUCT_TAGS += dalvik.gc.type-precise
@@ -244,18 +242,11 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Media
 PRODUCT_PROPERTY_OVERRIDES += \
-    lpa.decode=true \
-    lpa.use-stagefright=true \
-    media.stagefright.enable-player=true \
-    media.stagefright.enable-http=true \
-    media.stagefright.enable-aac=true \
-    media.stagefright.enable-qcp=true \
-    media.stagefright.enable-fma2dp=true \
-    media.stagefright.enable-scan=true \
-    mmp.enable.3g2=true \
+    lpa.decode=false \
+    tunnel.decode=true \
+    tunnel.audiovideo.decode=true \
     af.resampler.quality=255 \
-    ro.opengles.version=131072 \
-    mpq.audio.decode=true
+    ro.opengles.version=131072
 
 #misc
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -264,8 +255,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.usb.mtp_adb=0x2e33 \
     ro.usb.ptp=0x2e30 \
     ro.usb.ptp_adb=0x2e31 \
-    ro.hdmi.enable=true \
-    lockscreen.rot_override=true
+    ro.hdmi.enable=true
 
 #wifi
 PRODUCT_PROPERTY_OVERRIDES += \

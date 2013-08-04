@@ -144,7 +144,7 @@ case "$target" in
          chown system /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
          chown system /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
          chown system /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
-	 echo 1 > /sys/module/msm_thermal/core_control/enabled
+		echo 1 > /sys/module/msm_thermal/core_control/enabled
          chown root.system /sys/devices/system/cpu/mfreq
          chmod 220 /sys/devices/system/cpu/mfreq
          chown root.system /sys/devices/system/cpu/cpu1/online
@@ -387,3 +387,11 @@ esac
 insmod /system/lib/modules/adsprpc.ko
 chown system.system /dev/adsprpc-smd
 chmod 666 /dev/adsprpc-smd
+
+# Remove old dhcp leases to prevent "Obtaining IP Address" loop
+rm -f /data/misc/dhcp/*
+
+# Remove invalid configuration
+if grep ctrl_interface=wlan0 /data/misc/wifi/p2p_supplicant.conf > /dev/null; then
+    rm -f /data/misc/wifi/p2p_supplicant.conf
+fi
