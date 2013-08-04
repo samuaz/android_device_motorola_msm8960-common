@@ -73,6 +73,7 @@
 #define AID_LOOP_RADIO    1030  /* loop radio devices */
 #define AID_FM_RADIO      1031  /* FM radio */
 #define AID_SMARTCARD     1128  /* smart card subsystem */
+#define AID_MEDIA_DRM     1031  /* MediaDrm plugins */
 
 #define AID_SHELL         2000  /* adb and debug shell user */
 #define AID_CACHE         2001  /* cache access */
@@ -185,6 +186,7 @@ static const struct android_id_info android_ids[] = {
     { "misc",      AID_MISC, },
     { "nobody",    AID_NOBODY, },
     { "clat",      AID_CLAT, },
+    { "mediadrm",  AID_MEDIA_DRM, },
 };
 
 #define android_id_count \
@@ -222,6 +224,7 @@ static const struct fs_path_config android_dirs[] = {
     { 00755, AID_ROOT,   AID_SHELL,  0, "system/vendor" },
     { 00755, AID_ROOT,   AID_SHELL,  0, "system/xbin" },
     { 00755, AID_ROOT,   AID_ROOT,   0, "system/etc/ppp" },
+    { 00755, AID_ROOT,   AID_SHELL,  0, "vendor" },
     { 00777, AID_ROOT,   AID_ROOT,   0, "sdcard" },
     { 00755, AID_ROOT,   AID_ROOT,   0, 0 },
 };
@@ -240,7 +243,6 @@ static const struct fs_path_config android_files[] = {
     { 00550, AID_ROOT,      AID_SHELL,     0, "system/etc/init.ril" },
     { 00550, AID_ROOT,      AID_SHELL,     0, "system/etc/init.testmenu" },
     { 00550, AID_DHCP,      AID_SHELL,     0, "system/etc/dhcpcd/dhcpcd-run-hooks" },
-    { 00440, AID_BLUETOOTH, AID_BLUETOOTH, 0, "system/etc/dbus.conf" },
     { 00444, AID_RADIO,     AID_AUDIO,     0, "system/etc/AudioPara4.csv" },
     { 00555, AID_ROOT,      AID_ROOT,      0, "system/etc/ppp/*" },
     { 00555, AID_ROOT,      AID_ROOT,      0, "system/etc/rc.*" },
@@ -272,6 +274,7 @@ static const struct fs_path_config android_files[] = {
     { 00755, AID_ROOT,      AID_ROOT,      0, "system/lib/valgrind/*" },
     { 00755, AID_ROOT,      AID_SHELL,     0, "system/xbin/*" },
     { 00755, AID_ROOT,      AID_SHELL,     0, "system/vendor/bin/*" },
+    { 00755, AID_ROOT,      AID_SHELL,     0, "vendor/bin/*" },
     { 00750, AID_ROOT,      AID_SHELL,     0, "sbin/*" },
     { 00755, AID_ROOT,      AID_ROOT,      0, "bin/*" },
     { 00750, AID_ROOT,      AID_SHELL,     0, "init*" },
