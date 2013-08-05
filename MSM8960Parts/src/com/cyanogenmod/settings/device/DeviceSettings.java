@@ -87,7 +87,8 @@ public class DeviceSettings extends PreferenceActivity implements
             mKeypadMplangPref.setEnabled(false);
         }
 
-        if ((SystemProperties.get("ro.product.device","").equals("xt907")) &&
+        if ((SystemProperties.get("ro.product.device","").equals("xt897c")) ||
+            (SystemProperties.get("ro.product.device","").equals("xt907")) ||
             (SystemProperties.get("ro.product.device","").equals("xt926"))) {
             mReportGprsAsEdgePref.setEnabled(false);
         }
