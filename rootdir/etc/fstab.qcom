@@ -21,7 +21,3 @@
 /dev/block/platform/msm_sdcc.1/by-name/logo         /logo            emmc    defaults                                                                             defaults
 /devices/platform/msm_sdcc.3/mmc_host               /storage/sdcard1 auto    defaults                                                                             voldmanaged=sdcard:auto
 /devices/platform/msm_hsusb_host                    /storage/usbdisk auto    defaults                                                                             voldmanaged=usbdisk:auto
-
-rw,noatime,nodiratime,discard,noauto_da_alloc,nosuid,nodev,data=writeback,nobh,barrier=0
-noatime,nodiratime,noauto_da_alloc,nosuid,nodev,barrier=0
-noatime,data=writeback,barrier=0,nobh,errors=remount-ro
