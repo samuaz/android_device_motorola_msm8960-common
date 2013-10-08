@@ -3,9 +3,9 @@
 # specify MF_CHECK, and must come before any filesystems that do specify MF_CHECK
 #<src>                                              <mnt_point>      <type>  <mnt_flags and options>                                                              <fs_mgr_flags>
 
-/dev/block/platform/msm_sdcc.1/by-name/system       /system          ext4    rw,noatime,nodiratime,noauto_da_alloc,barrier=1                                      wait
-/dev/block/platform/msm_sdcc.1/by-name/userdata     /data            ext4    rw,nosuid,nodev,noatime,nodiratime,data=writeback,noauto_da_alloc,barrier=1          wait,check,encryptable=footer
-/dev/block/platform/msm_sdcc.1/by-name/cache        /cache           ext4    rw,nosuid,nodev,noatime,nodiratime,data=writeback,noauto_da_alloc,barrier=1          wait,check
+/dev/block/platform/msm_sdcc.1/by-name/system       /system          ext4    rw,noatime,nodiratime,discard,noauto_da_alloc,nosuid,nodev,data=writeback,nobh,barrier=0                                      wait
+/dev/block/platform/msm_sdcc.1/by-name/userdata     /data            ext4    rw,noatime,nodiratime,discard,noauto_da_alloc,nosuid,nodev,data=writeback,nobh,barrier=0          wait,check,encryptable=footer
+/dev/block/platform/msm_sdcc.1/by-name/cache        /cache           ext4    rw,noatime,nodiratime,discard,noauto_da_alloc,nosuid,nodev,data=writeback,nobh,barrier=0          wait,check
 /dev/block/platform/msm_sdcc.1/by-name/modem        /firmware        ext4    ro,nosuid,nodev,noatime,nodiratime,barrier=1,context=u:object_r:radio_efs_file:s0    wait,check
 /dev/block/platform/msm_sdcc.1/by-name/persist      /persist         ext4    rw,nosuid,nodev,noatime,nodiratime,barrier=1                                         wait,check
 /dev/block/platform/msm_sdcc.1/by-name/boot         /boot            emmc    defaults                                                                             defaults
@@ -21,3 +21,7 @@
 /dev/block/platform/msm_sdcc.1/by-name/logo         /logo            emmc    defaults                                                                             defaults
 /devices/platform/msm_sdcc.3/mmc_host               /storage/sdcard1 auto    defaults                                                                             voldmanaged=sdcard:auto
 /devices/platform/msm_hsusb_host                    /storage/usbdisk auto    defaults                                                                             voldmanaged=usbdisk:auto
+
+rw,noatime,nodiratime,discard,noauto_da_alloc,nosuid,nodev,data=writeback,nobh,barrier=0
+noatime,nodiratime,noauto_da_alloc,nosuid,nodev,barrier=0
+noatime,data=writeback,barrier=0,nobh,errors=remount-ro
