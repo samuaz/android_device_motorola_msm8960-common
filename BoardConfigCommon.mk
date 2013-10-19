@@ -25,6 +25,8 @@
 
 LOCAL_PATH := device/motorola/msm8960-common
 
+TARGET_SPECIFIC_HEADER_PATH += $(LOCAL_PATH)/include
+
 BOARD_VENDOR := motorola-msm8960
 
 # Platform
@@ -33,6 +35,7 @@ TARGET_BOARD_PLATFORM_GPU := qcom-adreno200
 # Inline kernel building
 TARGET_KERNEL_SOURCE := kernel/motorola/msm8960-common
 TARGET_KERNEL_CONFIG := msm8960_mmi_defconfig
+TARGET_KERNEL_SELINUX_CONFIG := msm8960_mmi_selinux_defconfig
 BOARD_KERNEL_CMDLINE := console=/dev/null androidboot.hardware=qcom user_debug=31 loglevel=1 zcache
 BOARD_KERNEL_BASE := 0x80200000
 BOARD_KERNEL_PAGESIZE := 2048
@@ -50,8 +53,16 @@ COMMON_GLOBAL_CFLAGS += -DMR0_CAMERA_BLOB -DCAMERA_POWERMODE -DQCOM_BSP_CAMERA_A
 #camera abi compatiblily
 TARGET_DISPLAY_INSECURE_MM_HEAP := true
 
+# Graphics
+BOARD_EGL_CFG := $(LOCAL_PATH)/config/egl.cfg
+
 # assert
 TARGET_OTA_ASSERT_DEVICE := xt925,xt926,xt907,vanquish_u,vanquish,scorpion_mini,mb886,qinara,asanti,asanti_c,xt897,xt897c
 
 # Recovery
 TARGET_RECOVERY_FSTAB := $(LOCAL_PATH)/rootdir/etc/fstab.qcom
+
+#TWRP
+TW_EXTERNAL_STORAGE_PATH := "/external_sd"
+TW_EXTERNAL_STORAGE_MOUNT_POINT := "external_sd"
+TARGET_USERIMAGES_USE_EXT4 := true
